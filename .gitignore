@@ -1,0 +1,21 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.local
+
+# Supabase
+supabase/.temp/
+supabase/functions/.env
+
+# Vite
+apps/*/dist/
+apps/*/.vite/
+
+# pnpm
+.pnpm-store/
+
+# OS
+.DS_Store
+Thumbs.db

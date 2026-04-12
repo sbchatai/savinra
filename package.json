@@ -1,0 +1,16 @@
+{
+  "name": "savinra",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev:store": "pnpm --filter store dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "dev": "pnpm --parallel --filter './apps/*' dev",
+    "build": "pnpm --filter './packages/*' build && pnpm --filter './apps/*' build",
+    "typecheck": "pnpm --recursive typecheck",
+    "lint": "pnpm --recursive lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
