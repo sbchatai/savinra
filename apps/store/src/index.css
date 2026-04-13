@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Lato', sans-serif;
+    background-color: #FAF8F3;
+    color: #2C2622;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
+}
+
+@layer utilities {
+  .savinra-shine {
+    background: linear-gradient(135deg,#D4AF37 0%,#F5E6A3 40%,#D4AF37 60%,#8C7A2E 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .savinra-shine-animated {
+    background: linear-gradient(90deg,#8C7A2E 0%,#D4AF37 25%,#F5E6A3 50%,#D4AF37 75%,#8C7A2E 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: savinra-shimmer 3s ease-in-out infinite;
+  }
+  .savinra-shine-on-dark {
+    background: linear-gradient(135deg,#D4AF37 0%,#F5E6A3 35%,#FFFACD 50%,#F5E6A3 65%,#D4AF37 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  @keyframes savinra-shimmer {
+    0%, 100% { background-position: 0% center; }
+    50% { background-position: 100% center; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .savinra-shine-animated { animation: none; background-position: 0% center; }
+  }
+  .skeleton {
+    background: linear-gradient(90deg, #F5ECDA 25%, #FAF8F3 50%, #F5ECDA 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+}
