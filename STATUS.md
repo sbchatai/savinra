@@ -9,18 +9,21 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1 — Pre-development |
-| Current stage | UI Lock → awaiting client approval |
-| Last session | 2026-04-13 |
+| Current phase | Phase 1a — UI Lock |
+| Current stage | ✅ Prototype live → awaiting client UI feedback |
+| Last session | 2026-04-14 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
+| Live preview | https://savinra-store.vercel.app (client-shareable) |
+| Last commit | 59448b6 — complete premium overhaul |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
 
 ---
 
-## What was completed (this session)
+## What was completed (cumulative)
 
+### Session 1 (2026-04-12/13)
 - [x] Scope locked — Phase 1 (store + admin + chatbot) and Phase 2 (all automations)
 - [x] Brand kit locked — savinra-brand-kit.md, logo.svg in assets/brand/
 - [x] Research report — 40+ tools screened, approved install list ready
@@ -33,7 +36,18 @@
 - [x] UI spec written — docs/ui-spec.md (all 44 screens, developer-ready)
 - [x] GitHub repo live — https://github.com/sbchatai/savinra
 - [x] MCP config updated — Supabase + GitHub MCPs in ~/.claude/settings.json
-- [x] launch.json updated — savinra store (5173) + admin (5174) registered
+- [x] Notion Decision Log + Screen Inventory populated (Savinra project page)
+
+### Session 2 (2026-04-13/14)
+- [x] PostToolUse hooks — auto ESLint + Prettier on every .ts/.tsx save
+- [x] Skills installed — awesome-design.md + seo-expert.md in ~/.claude/skills/
+- [x] 14-screen store prototype built — all pages with placeholder data
+- [x] Full premium UI overhaul — glassmorphism, framer-motion animations, brand tokens
+- [x] Customization feature — controlled per-product, renders on ProductDetailPage
+- [x] WhatsApp floating button in App.tsx
+- [x] All pages filled — no empty states anywhere
+- [x] Deployed to Vercel — https://savinra-store.vercel.app (auto-deploy via GitHub)
+- [x] Commit 59448b6 pushed to main
 
 ---
 
@@ -47,7 +61,9 @@
 
 ## Next step (start here next session)
 
-**After client approves UI:**
+**Immediate:** Share https://savinra-store.vercel.app with client for UI review.
+
+**After client approves UI (or incorporates feedback):**
 
 1. **Supabase schema** — write migrations for all ~57 tables
    - Core e-commerce: products, collections, orders, order_items, customers, addresses, cart, wishlist, coupons
