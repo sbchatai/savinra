@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { FAQS } from '@/data/placeholder'
 import { Search, ChevronDown, ChevronUp, MessageCircle, Mail, X } from 'lucide-react'
 
@@ -72,11 +73,22 @@ export default function HelpPage() {
                 : <ChevronDown size={18} className="text-cocoa/40 shrink-0" />
               }
             </button>
-            {openFaq === i && (
-              <div className="px-5 pb-5 pt-0">
-                <p className="font-body text-sm text-cocoa/70 leading-relaxed">{faq.answer}</p>
-              </div>
-            )}
+            <AnimatePresence initial={false}>
+              {openFaq === i && (
+                <motion.div
+                  key="content"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-5 pb-5 pt-0">
+                    <p className="font-body text-sm text-cocoa/70 leading-relaxed">{faq.answer}</p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         ))}
         {filteredFaqs.length === 0 && (
@@ -104,38 +116,46 @@ export default function HelpPage() {
         </div>
       </div>
 
-      {/* Floating chat bubble */}
+      {/* Floating chat bubble — offset to bottom-24 to avoid WhatsApp button conflict */}
       <button
         onClick={() => setChatOpen(!chatOpen)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gold-accessible text-white rounded-full shadow-lg flex items-center justify-center hover:bg-cocoa transition-colors z-50"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-gold-accessible text-white rounded-full shadow-lg flex items-center justify-center hover:bg-cocoa transition-colors z-50"
       >
         {chatOpen ? <X size={22} /> : <MessageCircle size={22} />}
       </button>
 
       {/* Mock chat panel */}
-      {chatOpen && (
-        <div className="fixed bottom-24 right-6 w-80 bg-parchment rounded-card shadow-lg border border-gold/30 overflow-hidden z-50">
-          <div className="bg-gold-accessible text-white p-4">
-            <h3 className="font-heading text-lg font-semibold">Chat with us</h3>
-            <p className="text-white/80 text-xs">Typically replies within minutes</p>
-          </div>
-          <div className="p-4 h-48 flex items-end">
-            <div className="bg-ivory rounded-card p-3 max-w-[80%]">
-              <p className="font-body text-sm text-cocoa">Hi! Welcome to SAVINRA. How can I help you today?</p>
-              <p className="font-body text-[10px] text-cocoa/40 mt-1">Just now</p>
+      <AnimatePresence>
+        {chatOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-40 right-6 w-80 bg-parchment rounded-card shadow-lg border border-gold/30 overflow-hidden z-50"
+          >
+            <div className="bg-gold-accessible text-white p-4">
+              <h3 className="font-heading text-lg font-semibold">Chat with us</h3>
+              <p className="text-white/80 text-xs">Typically replies within minutes</p>
             </div>
-          </div>
-          <div className="border-t border-ivory p-3 flex gap-2">
-            <input
-              placeholder="Type a message..."
-              className="flex-1 bg-ivory rounded-pill px-4 py-2 text-sm font-body text-cocoa placeholder:text-cocoa/40 focus:outline-none"
-            />
-            <button className="bg-gold-accessible text-white w-9 h-9 rounded-full flex items-center justify-center text-sm">
-              &rarr;
-            </button>
-          </div>
-        </div>
-      )}
+            <div className="p-4 h-48 flex items-end">
+              <div className="bg-ivory rounded-card p-3 max-w-[80%]">
+                <p className="font-body text-sm text-cocoa">Hi! Welcome to SAVINRA. How can I help you today?</p>
+                <p className="font-body text-[10px] text-cocoa/40 mt-1">Just now</p>
+              </div>
+            </div>
+            <div className="border-t border-ivory p-3 flex gap-2">
+              <input
+                placeholder="Type a message..."
+                className="flex-1 bg-ivory rounded-pill px-4 py-2 text-sm font-body text-cocoa placeholder:text-cocoa/40 focus:outline-none"
+              />
+              <button className="bg-gold-accessible text-white w-9 h-9 rounded-full flex items-center justify-center text-sm">
+                &rarr;
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

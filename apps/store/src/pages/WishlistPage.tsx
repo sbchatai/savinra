@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 import { PRODUCTS } from '@/data/placeholder'
 import { useWishlist } from '@/context/WishlistContext'
@@ -18,8 +19,19 @@ export default function WishlistPage() {
           <p className="font-body text-sm text-cocoa/60 mb-8">{wishlistProducts.length} items</p>
 
           {wishlistProducts.length === 0 ? (
-            <div className="text-center py-16">
-              <Heart size={48} className="mx-auto text-cocoa/20 mb-4" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16"
+            >
+              <motion.div
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                className="w-24 h-24 mx-auto bg-ivory rounded-full flex items-center justify-center mb-6"
+              >
+                <Heart size={40} className="text-gold-accessible" />
+              </motion.div>
               <p className="font-heading text-xl text-cocoa mb-2">No saved pieces yet</p>
               <p className="font-body text-sm text-cocoa/60 mb-6">Browse our collection and save the pieces you love.</p>
               <Link
@@ -28,11 +40,18 @@ export default function WishlistPage() {
               >
                 Explore the Collection
               </Link>
-            </div>
+            </motion.div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {wishlistProducts.map(p => (
-                <ProductCard key={p.id} product={p} />
+              {wishlistProducts.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.06 }}
+                >
+                  <ProductCard product={p} />
+                </motion.div>
               ))}
             </div>
           )}

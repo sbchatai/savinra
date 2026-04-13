@@ -3,26 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
     font-family: 'Lato', sans-serif;
     background-color: #FAF8F3;
     color: #2C2622;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  h1, h2, h3 { font-family: 'Cormorant Garamond', serif; }
+  h1, h2, h3, h4 { font-family: 'Cormorant Garamond', serif; }
 }
 
 @layer utilities {
+  /* ── Golden Shine ── */
   .savinra-shine {
-    background: linear-gradient(135deg,#D4AF37 0%,#F5E6A3 40%,#D4AF37 60%,#8C7A2E 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E6A3 40%, #D4AF37 60%, #8C7A2E 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
   .savinra-shine-animated {
-    background: linear-gradient(90deg,#8C7A2E 0%,#D4AF37 25%,#F5E6A3 50%,#D4AF37 75%,#8C7A2E 100%);
+    background: linear-gradient(90deg, #8C7A2E 0%, #D4AF37 25%, #F5E6A3 50%, #D4AF37 75%, #8C7A2E 100%);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -30,7 +32,7 @@
     animation: savinra-shimmer 3s ease-in-out infinite;
   }
   .savinra-shine-on-dark {
-    background: linear-gradient(135deg,#D4AF37 0%,#F5E6A3 35%,#FFFACD 50%,#F5E6A3 65%,#D4AF37 100%);
+    background: linear-gradient(135deg, #D4AF37 0%, #F5E6A3 35%, #FFFACD 50%, #F5E6A3 65%, #D4AF37 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -42,9 +44,45 @@
   @media (prefers-reduced-motion: reduce) {
     .savinra-shine-animated { animation: none; background-position: 0% center; }
   }
+
+  /* ── Glassmorphism ── */
+  .glass {
+    background: rgba(245, 236, 218, 0.65);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+  }
+  .glass-dark {
+    background: rgba(44, 38, 34, 0.72);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+  }
+  .glass-gold {
+    background: rgba(212, 175, 55, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+  }
+  .glass-white {
+    background: rgba(250, 248, 243, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(212, 175, 55, 0.15);
+  }
+
+  /* ── Skeleton loader ── */
   .skeleton {
     background: linear-gradient(90deg, #F5ECDA 25%, #FAF8F3 50%, #F5ECDA 75%);
     background-size: 200% 100%;
-    animation: shimmer 1.5s infinite linear;
+    animation: skeleton-shimmer 1.5s infinite linear;
   }
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Scroll fade-up (for IntersectionObserver fallback) ── */
+  .fade-up { opacity: 0; transform: translateY(24px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
 }

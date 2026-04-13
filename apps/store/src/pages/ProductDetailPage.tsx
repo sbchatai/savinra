@@ -1,233 +1,397 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { Heart, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Heart, ShoppingBag, Star, ChevronDown, ChevronRight, Truck, RotateCcw, Shield, Ruler, MapPin, Palette, Type } from 'lucide-react'
 import { PRODUCTS } from '@/data/placeholder'
+import ProductCard from '@/components/product/ProductCard'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
-import { formatPrice } from '@/lib/utils'
-import ProductCard from '@/components/product/ProductCard'
+import { cn, formatPrice } from '@/lib/utils'
+
+const SIZE_GUIDE = [
+  { size: 'XS', chest: '32"', waist: '26"', hip: '36"', length: '52"' },
+  { size: 'S', chest: '34"', waist: '28"', hip: '38"', length: '53"' },
+  { size: 'M', chest: '36"', waist: '30"', hip: '40"', length: '54"' },
+  { size: 'L', chest: '38"', waist: '32"', hip: '42"', length: '55"' },
+  { size: 'XL', chest: '40"', waist: '34"', hip: '44"', length: '56"' },
+  { size: 'XXL', chest: '42"', waist: '36"', hip: '46"', length: '57"' },
+]
 
 export default function ProductDetailPage() {
-  const { slug } = useParams()
-  const product = PRODUCTS.find(p => p.slug === slug)
+  const { slug } = useParams<{ slug: string }>()
+  const product = PRODUCTS.find(p => p.slug === slug) ?? PRODUCTS[0]
+  const related = PRODUCTS.filter(p => p.id !== product.id && p.collectionSlug === product.collectionSlug).slice(0, 3)
+  const more = PRODUCTS.filter(p => p.id !== product.id).slice(0, 3)
+
+  const [activeImage, setActiveImage] = useState(0)
+  const [selectedSize, setSelectedSize] = useState('')
+  const [qty, setQty] = useState(1)
+  const [openAccordion, setOpenAccordion] = useState<string | null>('description')
+  const [showSizeGuide, setShowSizeGuide] = useState(false)
+  const [pincode, setPincode] = useState('')
+  const [pincodeChecked, setPincodeChecked] = useState(false)
+  const [customizations, setCustomizations] = useState<Record<string, string>>({})
+  const [addedToCart, setAddedToCart] = useState(false)
+
   const { addItem } = useCart()
   const { toggle, has } = useWishlist()
-  const [selectedSize, setSelectedSize] = useState('')
-  const [mainImage, setMainImage] = useState(0)
-  const [qty, setQty] = useState(1)
-  const [descOpen, setDescOpen] = useState(true)
-  const [fabricOpen, setFabricOpen] = useState(false)
-  const [careOpen, setCareOpen] = useState(false)
-
-  if (!product) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-20 text-center">
-        <h1 className="font-heading text-3xl text-cocoa mb-4">Product not found</h1>
-        <Link to="/shop" className="text-gold-accessible font-body font-medium hover:underline">
-          Back to Shop
-        </Link>
-      </div>
-    )
-  }
-
   const wishlisted = has(product.id)
-  const others = PRODUCTS.filter(p => p.id !== product.id).slice(0, 3)
+  const avgRating = product.reviews.length > 0
+    ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
+    : 5
 
-  const handleAddToBag = () => {
-    const size = selectedSize || product.sizes[Math.floor(product.sizes.length / 2)]
-    addItem(product, size, qty)
+  function handleAddToCart() {
+    if (!selectedSize) return
+    addItem(product, selectedSize, qty)
+    setAddedToCart(true)
+    setTimeout(() => setAddedToCart(false), 2000)
   }
+
+  const ACCORDIONS = [
+    { id: 'description', label: 'Description', content: product.description },
+    { id: 'fabric', label: 'Fabric & Care', content: `Fabric: ${product.fabric}\n\n${product.care}` },
+    { id: 'craft', label: 'Craft Story', content: product.craftStory },
+    { id: 'shipping', label: 'Shipping & Returns', content: 'Free standard shipping on orders above \u20b9999. Standard delivery: 5\u20137 business days. Express: 2\u20133 days.\n\n15-day hassle-free returns. Items must be unworn with original tags. Customised pieces are non-returnable.' },
+  ]
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm font-body text-cocoa/60 mb-8">
-        <Link to="/" className="hover:text-gold-accessible">Home</Link>
-        <span>/</span>
-        <Link to="/shop" className="hover:text-gold-accessible">Shop</Link>
-        <span>/</span>
-        <Link to={`/collections/${product.collectionSlug}`} className="hover:text-gold-accessible">{product.collection}</Link>
-        <span>/</span>
+      <nav className="flex items-center gap-1.5 font-body text-xs text-cocoa/50 mb-8">
+        <Link to="/" className="hover:text-gold-accessible transition-colors">Home</Link>
+        <ChevronRight size={12} />
+        <Link to="/collections" className="hover:text-gold-accessible transition-colors">Collections</Link>
+        <ChevronRight size={12} />
+        <Link to={`/collections/${product.collectionSlug}`} className="hover:text-gold-accessible transition-colors">{product.collection}</Link>
+        <ChevronRight size={12} />
         <span className="text-cocoa">{product.name}</span>
       </nav>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-        {/* Images */}
-        <div className="lg:sticky lg:top-24 lg:self-start">
-          <div className="aspect-[3/4] overflow-hidden rounded-card mb-4">
-            <img
-              src={product.images[mainImage]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="flex gap-3">
-            {product.images.map((img, i) => (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+
+        {/* Left: Image Gallery */}
+        <div className="flex flex-col-reverse lg:flex-row gap-4">
+          {/* Thumbnails */}
+          <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible">
+            {product.images.map((src, i) => (
               <button
                 key={i}
-                onClick={() => setMainImage(i)}
-                className={`w-20 h-24 overflow-hidden rounded-card border-2 transition-colors ${
-                  i === mainImage ? 'border-gold-accessible' : 'border-transparent'
-                }`}
+                onClick={() => setActiveImage(i)}
+                className={cn(
+                  'flex-shrink-0 w-16 h-20 lg:w-20 lg:h-24 rounded-card overflow-hidden border-2 transition-all',
+                  activeImage === i ? 'border-gold-accessible' : 'border-transparent hover:border-gold/40'
+                )}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" />
+                <img src={src} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
               </button>
             ))}
           </div>
-        </div>
 
-        {/* Details */}
-        <div>
-          {/* Badges */}
-          <div className="flex gap-2 mb-3">
+          {/* Main Image */}
+          <div className="flex-1 relative rounded-card overflow-hidden bg-ivory aspect-[3/4]">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={activeImage}
+                src={product.images[activeImage]}
+                alt={product.name}
+                width={600}
+                height={800}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="w-full h-full object-cover"
+              />
+            </AnimatePresence>
             {product.isNew && (
-              <span className="bg-gold-accessible text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-pill">New</span>
-            )}
-            {product.isBestseller && (
-              <span className="bg-sage text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-pill">Bestseller</span>
+              <div className="absolute top-4 left-4 glass-gold px-3 py-1 rounded-full">
+                <span className="font-body text-xs font-semibold text-gold-accessible uppercase tracking-wider">New Arrival</span>
+              </div>
             )}
           </div>
+        </div>
 
-          <h1 className="font-heading text-3xl lg:text-4xl font-semibold text-cocoa mb-2">{product.name}</h1>
-          <p className="font-body text-sm text-sage mb-4">{product.collection}</p>
+        {/* Right: Product Info */}
+        <div className="flex flex-col">
+          {/* Badge row */}
+          <div className="flex items-center gap-2 mb-2">
+            {product.isBestseller && <span className="bg-gold-accessible text-white font-body text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">Bestseller</span>}
+            {product.customizable && <span className="bg-sage text-white font-body text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">Customisable</span>}
+          </div>
+
+          {/* Collection */}
+          <p className="font-body text-xs uppercase tracking-[0.3em] text-gold-accessible mb-2">{product.collection}</p>
+
+          {/* Name */}
+          <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-cocoa mb-3 leading-tight">{product.name}</h1>
+
+          {/* Rating */}
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex">
+              {[1,2,3,4,5].map(s => <Star key={s} size={14} className={s <= Math.round(avgRating) ? 'text-gold fill-gold' : 'text-cocoa/20'} fill={s <= Math.round(avgRating) ? 'currentColor' : 'none'} />)}
+            </div>
+            <span className="font-body text-sm text-cocoa/60">{avgRating.toFixed(1)} ({product.reviews.length} reviews)</span>
+          </div>
 
           {/* Price */}
-          <div className="flex items-center gap-3 mb-8">
+          <div className="flex items-baseline gap-3 mb-6">
             <span className="font-heading text-3xl font-medium text-cocoa">{formatPrice(product.price)}</span>
             {product.compareAtPrice && (
               <>
-                <span className="font-body text-lg text-cocoa/40 line-through">{formatPrice(product.compareAtPrice)}</span>
-                <span className="bg-success/10 text-success text-xs font-bold px-2 py-1 rounded-pill">
-                  {Math.round((1 - product.price / product.compareAtPrice) * 100)}% OFF
+                <span className="font-body text-lg text-sage line-through">{formatPrice(product.compareAtPrice)}</span>
+                <span className="glass-gold font-body text-xs font-semibold text-success px-2 py-0.5 rounded-full">
+                  {Math.round((1 - product.price / product.compareAtPrice) * 100)}% off
                 </span>
               </>
             )}
           </div>
 
-          {/* Sizes */}
+          {/* Fabric line */}
+          <p className="font-body text-sm text-cocoa/60 mb-6">Material: <span className="text-cocoa font-medium">{product.fabric}</span></p>
+
+          {/* Size Selector */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-body text-sm font-medium text-cocoa">Size</span>
-              <button className="font-body text-xs text-gold-accessible hover:underline">Size Guide</button>
+              <p className="font-body text-sm font-medium text-cocoa">Select Size</p>
+              <button onClick={() => setShowSizeGuide(true)} className="flex items-center gap-1 font-body text-xs text-gold-accessible hover:underline">
+                <Ruler size={12} /> Size Guide
+              </button>
             </div>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map(size => (
-                <button
+                <motion.button
                   key={size}
+                  whileTap={{ scale: 0.93 }}
                   onClick={() => setSelectedSize(size)}
-                  className={`min-w-[48px] px-4 py-2 rounded-pill text-sm font-body font-medium border transition-colors ${
+                  className={cn(
+                    'w-12 h-12 rounded-card font-body text-sm font-medium border-2 transition-all',
                     selectedSize === size
                       ? 'bg-gold-accessible text-white border-gold-accessible'
-                      : 'border-cocoa/20 text-cocoa hover:border-gold-accessible'
-                  }`}
+                      : 'bg-white text-cocoa border-cocoa/20 hover:border-gold-accessible'
+                  )}
                 >
                   {size}
-                </button>
+                </motion.button>
               ))}
             </div>
+            {!selectedSize && <p className="mt-2 font-body text-xs text-error">Please select a size</p>}
           </div>
 
-          {/* Quantity */}
-          <div className="mb-8">
-            <span className="font-body text-sm font-medium text-cocoa mb-3 block">Quantity</span>
-            <div className="inline-flex items-center border border-cocoa/20 rounded-pill">
-              <button
-                onClick={() => setQty(Math.max(1, qty - 1))}
-                className="w-10 h-10 flex items-center justify-center text-cocoa hover:text-gold-accessible"
-              >
-                <Minus size={16} />
-              </button>
-              <span className="w-10 text-center font-body text-sm">{qty}</span>
-              <button
-                onClick={() => setQty(qty + 1)}
-                className="w-10 h-10 flex items-center justify-center text-cocoa hover:text-gold-accessible"
-              >
-                <Plus size={16} />
-              </button>
+          {/* Qty + Add to Cart */}
+          <div className="flex gap-3 mb-4">
+            <div className="flex items-center border border-cocoa/20 rounded-card">
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">&minus;</button>
+              <span className="px-4 py-2 font-body text-sm font-medium text-cocoa min-w-[3rem] text-center">{qty}</span>
+              <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">+</button>
             </div>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleAddToCart}
+              disabled={!selectedSize}
+              className={cn(
+                'flex-1 flex items-center justify-center gap-2 font-body text-sm font-medium py-3 rounded-pill transition-all duration-200',
+                addedToCart
+                  ? 'bg-success text-white'
+                  : selectedSize
+                    ? 'bg-gold-accessible text-white hover:bg-cocoa'
+                    : 'bg-cocoa/20 text-cocoa/40 cursor-not-allowed'
+              )}
+            >
+              <ShoppingBag size={16} />
+              {addedToCart ? 'Added to Bag \u2713' : 'Add to Bag'}
+            </motion.button>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 mb-8">
-            <button
-              onClick={handleAddToBag}
-              className="flex-1 bg-gold-accessible text-white font-body font-medium text-sm py-3.5 rounded-pill hover:bg-cocoa transition-colors"
-            >
-              Add to Bag
-            </button>
-            <button
-              onClick={() => toggle(product.id)}
-              className={`w-14 h-14 flex items-center justify-center rounded-pill border-2 transition-colors ${
-                wishlisted ? 'border-error bg-error/5' : 'border-cocoa/20 hover:border-gold-accessible'
-              }`}
-            >
-              <Heart size={20} className={wishlisted ? 'fill-error text-error' : 'text-cocoa'} />
-            </button>
+          {/* Wishlist */}
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => toggle(product.id)}
+            className={cn(
+              'w-full flex items-center justify-center gap-2 border-2 font-body text-sm font-medium py-3 rounded-pill transition-all mb-6',
+              wishlisted
+                ? 'border-error text-error bg-error/5'
+                : 'border-cocoa/25 text-cocoa hover:border-gold-accessible hover:text-gold-accessible'
+            )}
+          >
+            <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
+            {wishlisted ? 'Saved to Wishlist' : 'Save to Wishlist'}
+          </motion.button>
+
+          {/* Delivery Check */}
+          <div className="glass rounded-card p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <MapPin size={16} className="text-gold-accessible" />
+              <p className="font-body text-sm font-medium text-cocoa">Check Delivery</p>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Enter PIN code"
+                value={pincode}
+                onChange={e => { setPincode(e.target.value.replace(/\D/g, '')); setPincodeChecked(false) }}
+                className="flex-1 px-3 py-2 text-sm font-body border border-cocoa/20 rounded-card bg-white focus:outline-none focus:border-gold-accessible"
+              />
+              <button
+                onClick={() => pincode.length === 6 && setPincodeChecked(true)}
+                className="px-4 py-2 bg-gold-accessible text-white font-body text-sm font-medium rounded-card hover:bg-cocoa transition-colors"
+              >Check</button>
+            </div>
+            {pincodeChecked && <p className="mt-2 font-body text-xs text-success flex items-center gap-1"><Truck size={12} /> Delivery available &middot; Arrives in 5&ndash;7 business days</p>}
           </div>
 
-          {/* Stock */}
-          {product.stockCount <= 5 && (
-            <p className="text-warning text-sm font-body mb-6">Only {product.stockCount} left in stock</p>
+          {/* Customisation */}
+          {product.customizable && product.customizationOptions.length > 0 && (
+            <div className="glass-gold rounded-card p-4 mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Palette size={16} className="text-gold-accessible" />
+                <p className="font-body text-sm font-semibold text-cocoa">Personalise This Piece</p>
+                <span className="ml-auto font-body text-xs text-gold-accessible">Optional</span>
+              </div>
+              <div className="flex flex-col gap-4">
+                {product.customizationOptions.map(opt => (
+                  <div key={opt.id}>
+                    <label className="font-body text-xs font-medium text-cocoa/70 uppercase tracking-wide mb-1.5 block">{opt.label}</label>
+                    {opt.type === 'text' && (
+                      <input
+                        type="text"
+                        maxLength={opt.maxLength}
+                        placeholder={`Max ${opt.maxLength} characters`}
+                        value={customizations[opt.id] || ''}
+                        onChange={e => setCustomizations(c => ({ ...c, [opt.id]: e.target.value.toUpperCase() }))}
+                        className="w-full px-3 py-2 text-sm font-body border border-cocoa/20 rounded-card bg-white/70 focus:outline-none focus:border-gold-accessible uppercase tracking-widest"
+                      />
+                    )}
+                    {(opt.type === 'select' || opt.type === 'color') && opt.choices && (
+                      <div className="flex flex-wrap gap-2">
+                        {opt.choices.map(choice => (
+                          <button
+                            key={choice}
+                            onClick={() => setCustomizations(c => ({ ...c, [opt.id]: choice }))}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full font-body text-xs border transition-all',
+                              customizations[opt.id] === choice
+                                ? 'bg-gold-accessible text-white border-gold-accessible'
+                                : 'border-cocoa/25 text-cocoa hover:border-gold-accessible'
+                            )}
+                          >
+                            {choice}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <p className="font-body text-xs text-cocoa/50 flex items-center gap-1">
+                  <Type size={11} /> Customised orders add 3&ndash;5 business days to delivery
+                </p>
+              </div>
+            </div>
           )}
 
+          {/* Trust icons */}
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { icon: Truck, label: 'Free shipping above \u20b9999' },
+              { icon: RotateCcw, label: '15-day easy returns' },
+              { icon: Shield, label: '100% authentic' },
+            ].map((t, i) => (
+              <div key={i} className="text-center">
+                <t.icon size={18} className="mx-auto text-sage mb-1" />
+                <p className="font-body text-[10px] text-cocoa/60 leading-tight">{t.label}</p>
+              </div>
+            ))}
+          </div>
+
           {/* Accordions */}
-          <div className="border-t border-ivory">
-            {/* Description */}
-            <button
-              onClick={() => setDescOpen(!descOpen)}
-              className="w-full flex items-center justify-between py-4 text-left"
-            >
-              <span className="font-body text-sm font-medium text-cocoa">Description</span>
-              {descOpen ? <ChevronUp size={18} className="text-cocoa/60" /> : <ChevronDown size={18} className="text-cocoa/60" />}
-            </button>
-            {descOpen && (
-              <p className="font-body text-sm text-cocoa/70 leading-relaxed pb-4">{product.description}</p>
-            )}
-
-            {/* Fabric */}
-            <div className="border-t border-ivory">
-              <button
-                onClick={() => setFabricOpen(!fabricOpen)}
-                className="w-full flex items-center justify-between py-4 text-left"
-              >
-                <span className="font-body text-sm font-medium text-cocoa">Fabric & Material</span>
-                {fabricOpen ? <ChevronUp size={18} className="text-cocoa/60" /> : <ChevronDown size={18} className="text-cocoa/60" />}
-              </button>
-              {fabricOpen && (
-                <p className="font-body text-sm text-cocoa/70 leading-relaxed pb-4">
-                  Material: {product.fabric}. Handcrafted in India with ethically sourced materials. Each piece may have slight variations due to the artisan process.
-                </p>
-              )}
-            </div>
-
-            {/* Care */}
-            <div className="border-t border-ivory">
-              <button
-                onClick={() => setCareOpen(!careOpen)}
-                className="w-full flex items-center justify-between py-4 text-left"
-              >
-                <span className="font-body text-sm font-medium text-cocoa">Care Instructions</span>
-                {careOpen ? <ChevronUp size={18} className="text-cocoa/60" /> : <ChevronDown size={18} className="text-cocoa/60" />}
-              </button>
-              {careOpen && (
-                <p className="font-body text-sm text-cocoa/70 leading-relaxed pb-4">
-                  Dry clean recommended. Store in a cool, dry place away from direct sunlight. Iron on low heat with a pressing cloth.
-                </p>
-              )}
-            </div>
+          <div className="border-t border-gold/20">
+            {ACCORDIONS.map(acc => (
+              <div key={acc.id} className="border-b border-gold/20">
+                <button
+                  onClick={() => setOpenAccordion(openAccordion === acc.id ? null : acc.id)}
+                  className="w-full flex items-center justify-between py-4 font-body text-sm font-medium text-cocoa text-left"
+                >
+                  {acc.label}
+                  <motion.div animate={{ rotate: openAccordion === acc.id ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown size={16} className="text-sage" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {openAccordion === acc.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
+                    >
+                      <p className="font-body text-sm text-cocoa/70 leading-relaxed pb-4 whitespace-pre-line">{acc.content}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Complete the Look */}
-      <section className="mt-20 mb-12">
-        <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Complete the Look</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {others.map(p => (
-            <ProductCard key={p.id} product={p} />
+      {/* Size Guide Modal */}
+      <AnimatePresence>
+        {showSizeGuide && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-cocoa/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-parchment rounded-card p-6 max-w-lg w-full" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-heading text-xl font-semibold text-cocoa">Size Guide</h3>
+                <button onClick={() => setShowSizeGuide(false)} className="text-cocoa/50 hover:text-cocoa">&times;</button>
+              </div>
+              <p className="font-body text-xs text-cocoa/60 mb-4">All measurements are in inches. Measure your body and match to the closest size.</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm font-body">
+                  <thead><tr className="bg-gold-accessible text-white"><th className="py-2 px-3 text-left">Size</th><th className="py-2 px-3">Chest</th><th className="py-2 px-3">Waist</th><th className="py-2 px-3">Hip</th><th className="py-2 px-3">Length</th></tr></thead>
+                  <tbody>{SIZE_GUIDE.map((row, i) => (<tr key={row.size} className={i % 2 === 0 ? 'bg-ivory' : 'bg-white'}><td className="py-2 px-3 font-medium">{row.size}</td><td className="py-2 px-3 text-center">{row.chest}</td><td className="py-2 px-3 text-center">{row.waist}</td><td className="py-2 px-3 text-center">{row.hip}</td><td className="py-2 px-3 text-center">{row.length}</td></tr>))}</tbody>
+                </table>
+              </div>
+              <p className="font-body text-xs text-cocoa/60 mt-3">When between sizes, we recommend sizing up. Our garments have a relaxed, comfortable fit.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Reviews */}
+      <section className="mt-16 border-t border-gold/20 pt-12">
+        <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Customer Reviews</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {product.reviews.map((review, i) => (
+            <motion.div key={review.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="bg-ivory rounded-card p-5 shadow-card">
+              <div className="flex items-center gap-1 mb-2">
+                {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= review.rating ? 'text-gold fill-gold' : 'text-cocoa/20'} fill={s <= review.rating ? 'currentColor' : 'none'} />)}
+              </div>
+              <p className="font-body text-sm text-cocoa/80 leading-relaxed mb-3 italic">&ldquo;{review.body}&rdquo;</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-body text-xs font-semibold text-cocoa">{review.name}</p>
+                  <p className="font-body text-[11px] text-sage">{review.location} &middot; {review.date}</p>
+                </div>
+                {review.verified && <span className="font-body text-[10px] text-success bg-success/10 px-2 py-0.5 rounded-full">Verified</span>}
+              </div>
+            </motion.div>
           ))}
         </div>
       </section>
+
+      {/* Complete the Look */}
+      {(related.length > 0 || more.length > 0) && (
+        <section className="mt-16 border-t border-gold/20 pt-12">
+          <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Complete the Look</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {(related.length >= 3 ? related : more).slice(0, 3).map((p, i) => (
+              <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+                <ProductCard product={p} />
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

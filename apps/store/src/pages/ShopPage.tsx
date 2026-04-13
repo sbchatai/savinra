@@ -1,13 +1,16 @@
 import { useState, useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { PRODUCTS, COLLECTIONS } from '@/data/placeholder'
 import ProductCard from '@/components/product/ProductCard'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc'
 
 export default function ShopPage() {
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set())
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set())
+  const [occasionFilter, setOccasionFilter] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
@@ -34,6 +37,7 @@ export default function ShopPage() {
   const clearFilters = () => {
     setSelectedCollections(new Set())
     setSelectedSizes(new Set())
+    setOccasionFilter('')
   }
 
   const filtered = useMemo(() => {
@@ -44,15 +48,18 @@ export default function ShopPage() {
     if (selectedSizes.size > 0) {
       result = result.filter(p => p.sizes.some(s => selectedSizes.has(s)))
     }
+    if (occasionFilter) {
+      result = result.filter(p => p.occasions.includes(occasionFilter))
+    }
     switch (sort) {
       case 'price-asc': result.sort((a, b) => a.price - b.price); break
       case 'price-desc': result.sort((a, b) => b.price - a.price); break
       default: break
     }
     return result
-  }, [selectedCollections, selectedSizes, sort])
+  }, [selectedCollections, selectedSizes, occasionFilter, sort])
 
-  const hasFilters = selectedCollections.size > 0 || selectedSizes.size > 0
+  const hasFilters = selectedCollections.size > 0 || selectedSizes.size > 0 || !!occasionFilter
 
   const FilterPanel = () => (
     <div className="space-y-8">
@@ -114,13 +121,31 @@ export default function ShopPage() {
         <p className="font-body text-sm text-cocoa/60">{filtered.length} pieces</p>
       </div>
 
+      {/* Occasion tabs */}
+      <div className="flex flex-wrap gap-2 mb-6">
+        {['All', 'Festive', 'Wedding', 'Casual', 'Work', 'Party'].map(occ => (
+          <button
+            key={occ}
+            onClick={() => setOccasionFilter(occ === 'All' ? '' : occ.toLowerCase())}
+            className={cn(
+              'px-4 py-2 rounded-pill font-body text-sm font-medium border transition-all',
+              (occ === 'All' && !occasionFilter) || occasionFilter === occ.toLowerCase()
+                ? 'bg-gold-accessible text-white border-gold-accessible'
+                : 'border-cocoa/20 text-cocoa hover:border-gold-accessible'
+            )}
+          >
+            {occ}
+          </button>
+        ))}
+      </div>
+
       {/* Mobile filter/sort bar */}
       <div className="lg:hidden flex gap-3 mb-6">
         <button
           onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
           className="flex items-center gap-2 px-4 py-2 bg-ivory rounded-pill text-sm font-body font-medium text-cocoa border border-cocoa/10"
         >
-          <SlidersHorizontal size={16} /> Filters {hasFilters && `(${selectedCollections.size + selectedSizes.size})`}
+          <SlidersHorizontal size={16} /> Filters {hasFilters && `(${selectedCollections.size + selectedSizes.size + (occasionFilter ? 1 : 0)})`}
         </button>
         <div className="relative">
           <select
@@ -167,6 +192,14 @@ export default function ShopPage() {
               {size} <X size={12} />
             </button>
           ))}
+          {occasionFilter && (
+            <button
+              onClick={() => setOccasionFilter('')}
+              className="flex items-center gap-1 bg-gold-highlight/30 text-cocoa text-xs font-body px-3 py-1.5 rounded-pill"
+            >
+              {occasionFilter} <X size={12} />
+            </button>
+          )}
         </div>
       )}
 
@@ -206,8 +239,15 @@ export default function ShopPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filtered.map(p => (
-                <ProductCard key={p.id} product={p} />
+              {filtered.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.06 }}
+                >
+                  <ProductCard product={product} />
+                </motion.div>
               ))}
             </div>
           )}
