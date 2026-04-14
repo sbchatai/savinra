@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ── CSS custom properties (brand tokens) ── */
+  :root {
+    --color-gold: #D4AF37;
+    --color-gold-accessible: #8C7A2E;
+    --color-gold-highlight: #F5E6A3;
+    --color-sage: #9FAF90;
+    --color-ivory: #F5ECDA;
+    --color-parchment: #FAF8F3;
+    --color-cocoa: #2C2622;
+    --color-admin-bg: #F4F5F7;
+    --color-admin-sidebar: #1E1A17;
+    --color-admin-border: #E5E2DC;
+    --color-success: #5A8A6A;
+    --color-warning: #C49B2A;
+    --color-error: #B5453A;
+    --color-info: #6B8DA6;
+
+    --sidebar-width: 240px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background-color: var(--color-admin-bg);
+    color: var(--color-cocoa);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Cormorant Garamond', serif;
+  }
+}
+
+@layer utilities {
+  /* ── Skeleton loader ── */
+  .skeleton {
+    background: linear-gradient(90deg, #E5E2DC 25%, #F4F5F7 50%, #E5E2DC 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite linear;
+  }
+
+  @keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* ── Table utilities ── */
+  .table-row-stripe:nth-child(even) {
+    background-color: #FAFAF9;
+  }
+
+  /* ── Admin fade-up ── */
+  .fade-up {
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton { animation: none; background-position: 0 0; }
+    .fade-up { transition: none; }
+  }
+}
