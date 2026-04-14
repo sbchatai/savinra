@@ -9,12 +9,12 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1a — UI Lock |
-| Current stage | ✅ Prototype live → awaiting client UI feedback |
+| Current phase | Phase 1b — Backend Foundation |
+| Current stage | ✅ Schema live → start admin scaffold next |
 | Last session | 2026-04-14 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
-| Live preview | https://savinra-store.vercel.app (client-shareable) |
-| Last commit | 59448b6 — complete premium overhaul |
+| Live preview | https://savinra-store.vercel.app (shared with client) |
+| Last commit | c752c23 — feat: complete Phase 1b backend foundation |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -26,57 +26,64 @@
 ### Session 1 (2026-04-12/13)
 - [x] Scope locked — Phase 1 (store + admin + chatbot) and Phase 2 (all automations)
 - [x] Brand kit locked — savinra-brand-kit.md, logo.svg in assets/brand/
-- [x] Research report — 40+ tools screened, approved install list ready
-- [x] Monorepo scaffold created — apps/store, apps/admin, packages/shared
-- [x] Supabase project created — savinra, ap-south-1, free tier
-- [x] TypeScript types written — Product, Order, OrderItem, Customer, Address
-- [x] Brand tokens written — packages/shared/src/brand.ts (colors, gradients, fonts)
-- [x] Utility functions written — INR formatter, Indian phone validator, IST date formatter
-- [x] Architecture doc written — docs/architecture.md
-- [x] UI spec written — docs/ui-spec.md (all 44 screens, developer-ready)
+- [x] Monorepo scaffold — apps/store, apps/admin, packages/shared
+- [x] Supabase project created — rzknetoapokbwmyhvqac, ap-south-1, free tier
+- [x] Brand tokens, utilities, architecture doc, UI spec (44 screens)
 - [x] GitHub repo live — https://github.com/sbchatai/savinra
-- [x] MCP config updated — Supabase + GitHub MCPs in ~/.claude/settings.json
-- [x] Notion Decision Log + Screen Inventory populated (Savinra project page)
 
 ### Session 2 (2026-04-13/14)
 - [x] PostToolUse hooks — auto ESLint + Prettier on every .ts/.tsx save
-- [x] Skills installed — awesome-design.md + seo-expert.md in ~/.claude/skills/
-- [x] 14-screen store prototype built — all pages with placeholder data
-- [x] Full premium UI overhaul — glassmorphism, framer-motion animations, brand tokens
-- [x] Customization feature — controlled per-product, renders on ProductDetailPage
-- [x] WhatsApp floating button in App.tsx
-- [x] All pages filled — no empty states anywhere
-- [x] Deployed to Vercel — https://savinra-store.vercel.app (auto-deploy via GitHub)
-- [x] Commit 59448b6 pushed to main
+- [x] Agent team set up — ~/.claude/agents/ (architect, frontend-lead, backend-lead, qa-reviewer, deploy-ops, explorer, researcher, auditor)
+- [x] Skills installed — awesome-design, seo-expert, security-expert, database-expert, testing-strategy, debugging
+- [x] AGENTS.md — living handbook at D:/ai-lab/AGENTS.md
+- [x] 14-screen store prototype — all pages, premium UI, glassmorphism, framer-motion
+- [x] SVG logo wired in — header, footer, checkout (leaf on final A)
+- [x] Broken Unsplash images fixed — 3 URLs replaced with working alternatives
+- [x] Vercel auto-deploy fixed — root vercel.json + pnpm lockfile committed
+- [x] D:\Savinra archived → D:\ai-lab\archive\savinra-next-prototype (safe)
+- [x] UI live at https://savinra-store.vercel.app — shared with client 2026-04-14
+
+### Session 3 (2026-04-14) — Phase 1b Backend
+- [x] Supabase migrations 001–007 written and applied to live project
+  - 001: extensions, helpers, is_admin() function
+  - 002: customers, addresses, admin_users + auth triggers
+  - 003: collections, products, variants, images, reviews, customization options
+  - 004: cart_items, wishlist_items, coupons, coupon_uses
+  - 005: orders, order_items, shipments, returns, payment_attempts + auto-numbering
+  - 006: chat, abandoned_cart, WhatsApp logs, segments, AI images, inventory alerts
+  - 007: store_settings (seeded), FAQs (seeded), announcements, notification_logs
+- [x] RLS policies on every table (mandatory, zero exceptions)
+- [x] TypeScript types generated from Supabase schema → packages/shared/src/types/database.ts (57KB)
+- [x] Domain type files (products, customers, orders) rewritten as Database<> wrappers
+- [x] Razorpay webhook Edge Function — HMAC SHA256 verification + order status updates
+- [x] .env.example updated with all required variables
 
 ---
 
 ## Pending client action
 
-- [ ] **Client UI approval** — UI spec shared for review on 2026-04-13
-  - If approved: proceed to DB schema
-  - If changes requested: update ui-spec.md, revise affected components
+- [ ] **Client UI approval** — client reviewing https://savinra-store.vercel.app
+  - Expected response: ~2 days from 2026-04-14
+  - Minor UI tweaks expected — checklist items won't require DB changes
 
 ---
 
 ## Next step (start here next session)
 
-**Immediate:** Share https://savinra-store.vercel.app with client for UI review.
+**Immediate:** Begin admin panel scaffold (Point 4 — can proceed without client feedback).
 
-**After client approves UI (or incorporates feedback):**
+1. **Admin panel scaffold** (`apps/admin/`)
+   - Already scaffolded; needs: routing, shadcn/ui init, layout shell
+   - Pages: Dashboard, Orders list, Order detail, Products, Customers, Settings
+   - Use shadcn/ui Table, Dialog, Badge, Form components
+   - Auth guard: admin_users check via Supabase
 
-1. **Supabase schema** — write migrations for all ~57 tables
-   - Core e-commerce: products, collections, orders, order_items, customers, addresses, cart, wishlist, coupons
-   - Automation support: chat_sessions, chat_messages, ai_generated_images, abandoned_carts, whatsapp_logs, customer_segments, social_posts, return_requests, inventory_alerts
-   - Admin: order_events (timeline), admin_users, store_settings, faq_items
-   - Apply RLS policies on every table (mandatory)
-   - Generate TypeScript types → packages/shared/src/types/database.ts
+2. **API contracts doc** — `docs/api-contracts.md`
+   - Edge Function signatures for: create-razorpay-order, razorpay-webhook, send-whatsapp
+   - Supabase query patterns for: product listing, cart sync, checkout
 
-2. **shadcn/ui init** — run `npx shadcn@latest init` in both apps/store and apps/admin
-
-3. **Vite config** — set up tailwind.config.ts with brand token overrides in both apps
-
-**File to write next:** `supabase/migrations/001_initial_schema.sql`
+3. **Deploy Razorpay webhook** — `supabase functions deploy razorpay-webhook`
+   - Requires: RAZORPAY_WEBHOOK_SECRET set (client to provide)
 
 ---
 
@@ -84,27 +91,27 @@
 
 | Decision | Rationale |
 |---|---|
-| Monorepo (one repo, two apps) | Shared types + brand tokens, deploy separately to Vercel |
-| n8n for automations, Edge Functions for transactional | Edge Fns for payment/order atomicity; n8n for async messaging |
-| pnpm workspaces | Shared packages between store and admin |
+| Monorepo (one repo, two apps) | Shared types + brand tokens, deploy separately |
+| n8n for automations, Edge Functions for transactional | Atomicity vs flexibility |
+| pnpm workspaces | Shared packages |
 | Supabase ap-south-1 | Lowest latency for Indian users |
-| No guest checkout | Customer accounts enable re-engagement automations |
-| Razorpay (not Stripe) | Indian payment methods (UPI, netbanking, COD) |
-| FASHN AI primary, fal.ai fallback | Virtual try-on for AI photography pipeline |
-| Client pays all API bills | Full handover model — Synapticon builds, client owns |
+| No guest checkout | Re-engagement automations require accounts |
+| Razorpay | Indian payment methods (UPI, netbanking, COD) |
+| INR stored as paise (INTEGER) | No floating point rounding errors |
+| Order number format: SAV-YYYYMMDD-NNNN | Human-readable, sortable |
 
 ---
 
-## Credentials & config (never commit actual secrets — this is pointer-only)
+## Credentials & config (pointer-only — never commit secrets)
 
 | Secret | Location |
 |---|---|
 | Supabase service role key | Sunil has it — set in ~/.claude/settings.json for MCP |
-| Supabase publishable key | sb_publishable_RoaATgu6II9luXOg3A7lTQ_-uQV8gsd (safe, client-side) |
+| Supabase anon key | From Supabase dashboard > API Settings |
 | GitHub PAT | Sunil has it — set in ~/.claude/settings.json for MCP |
-| Razorpay keys | Not yet — client to create account and share |
-| FASHN AI key | Not yet — client to create account |
-| WhatsApp API | Not yet — provider not yet chosen (Interakt vs AiSensy) |
+| Razorpay keys | Pending — client to create account and share |
+| WhatsApp API key | Pending — provider not yet chosen (Interakt vs AiSensy) |
+| fal.ai API key | Pending — for AI product image generation |
 
 ---
 
@@ -112,9 +119,8 @@
 
 | Blocker | Owner | Required for |
 |---|---|---|
-| Client UI approval | Client (Savinra) | DB schema can start |
-| Razorpay account | Client | Payment integration |
-| FASHN AI account | Client | AI photography pipeline |
+| Client UI approval | Client (Savinra) | Any UI changes |
+| Razorpay account | Client | Payment integration, webhook deploy |
 | WhatsApp provider choice | Sunil | Phase 2 automations |
 
 ---
@@ -123,10 +129,10 @@
 
 ```
 Phase 0 — Setup          ✅ DONE
-Phase 1a — UI Lock       🔄 IN PROGRESS (awaiting client approval)
-Phase 1b — DB Schema     ⏳ Next
-Phase 1c — Store PWA     ⏳ After schema
-Phase 1d — Admin Panel   ⏳ Parallel with store
+Phase 1a — UI Lock       ✅ DONE (client reviewing)
+Phase 1b — DB Schema     ✅ DONE (35 tables live in Supabase)
+Phase 1c — Store PWA     ⏳ After client feedback incorporated
+Phase 1d — Admin Panel   🔄 NEXT
 Phase 1e — Integrations  ⏳ Razorpay + Shiprocket + Chatbot
 Phase 2 — Automations    ⏳ After Phase 1 delivery
 Handover                 ⏳ End of Phase 2
@@ -136,10 +142,10 @@ Handover                 ⏳ End of Phase 2
 
 ## Reusability note
 
-When Savinra Phase 1 is complete, extract these as templates in `D:/ai-lab/templates/`:
-- `ecommerce-supabase/` — schema, RLS policies, seed
-- `razorpay-edge-fn/` — payment create + webhook verify
+When Savinra Phase 1 ships, extract as templates in `D:/ai-lab/templates/`:
+- `ecommerce-supabase/` — all 7 migrations, RLS policies, seed data
+- `razorpay-edge-fn/` — create-order + webhook handler
 - `shiprocket-wrapper/` — Deno API client
 - `whatsapp-n8n/` — order notification workflow JSONs
 - `ai-chatbot-widget/` — React widget + Edge Function
-- `admin-panel-scaffold/` — shadcn admin shell
+- `admin-panel-scaffold/` — shadcn admin shell with auth guard
