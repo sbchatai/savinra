@@ -48,9 +48,7 @@ export default function SavinraHeader() {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
-              <span className="savinra-shine-animated font-heading font-bold text-2xl tracking-widest">
-                SAVINRA
-              </span>
+              <img src="/savinra-logo.svg" alt="SAVINRA" className="h-9 w-auto" />
             </Link>
 
             {/* Center Nav (desktop) */}
@@ -140,7 +138,7 @@ export default function SavinraHeader() {
               className="fixed left-0 top-0 bottom-0 w-72 bg-parchment z-50 md:hidden flex flex-col"
             >
               <div className="flex items-center justify-between p-5 border-b border-gold/20">
-                <span className="savinra-shine font-heading font-bold text-xl tracking-widest">SAVINRA</span>
+                <img src="/savinra-logo.svg" alt="SAVINRA" className="h-7 w-auto" />
                 <button onClick={() => setMobileOpen(false)}><X size={20} className="text-cocoa" /></button>
               </div>
               <nav className="flex-1 p-5 flex flex-col gap-1">

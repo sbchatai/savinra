@@ -21,7 +21,7 @@ const TRUST_ITEMS = [
 
 const INSTAGRAM_IMAGES = [
   'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=400&h=400&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1609357605129-1283b117c1e2?w=400&h=400&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1526413232644-8a40f03cc03b?w=400&h=400&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?w=400&h=400&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400&h=400&auto=format&fit=crop&q=80',
   'https://images.unsplash.com/photo-1571513800374-df1bbe650e56?w=400&h=400&auto=format&fit=crop&q=80',

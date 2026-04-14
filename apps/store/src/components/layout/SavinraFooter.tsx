@@ -12,7 +12,7 @@ export default function SavinraFooter() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="md:col-span-1">
-            <span className="savinra-shine-animated font-heading font-bold text-2xl tracking-widest block mb-2">SAVINRA</span>
+            <img src="/savinra-logo.svg" alt="SAVINRA" className="h-8 w-auto mb-2 brightness-200" />
             <p className="savinra-shine-on-dark font-heading italic text-base mb-4">House of Refined Living</p>
             <p className="font-body text-xs text-parchment/50 leading-relaxed mb-6">
               Crafting sustainable indo-western fashion since 2020. Every piece tells the story of an artisan's hands.

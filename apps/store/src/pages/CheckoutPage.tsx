@@ -33,7 +33,7 @@ export default function CheckoutPage() {
       <header className="border-b border-gold/20 bg-parchment/90 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/">
-            <span className="savinra-shine font-heading font-bold text-xl tracking-widest">SAVINRA</span>
+            <img src="/savinra-logo.svg" alt="SAVINRA" className="h-7 w-auto" />
           </Link>
           <div className="flex items-center gap-1.5 font-body text-xs">
             {STEPS.map((s, i) => (
