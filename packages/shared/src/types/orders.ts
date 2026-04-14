@@ -1,62 +1,50 @@
-export type OrderStatus =
-  | 'pending_payment'
-  | 'payment_failed'
-  | 'confirmed'
-  | 'processing'
-  | 'ready_to_ship'
-  | 'shipped'
-  | 'out_for_delivery'
-  | 'delivered'
-  | 'cancelled'
-  | 'return_requested'
-  | 'returned'
-  | 'refunded'
+import type { Database } from './database'
 
-export type PaymentMethod = 'razorpay_upi' | 'razorpay_card' | 'razorpay_netbanking' | 'cod'
+// ── Row types ─────────────────────────────────────────────────
+export type Order              = Database['public']['Tables']['orders']['Row']
+export type OrderInsert        = Database['public']['Tables']['orders']['Insert']
+export type OrderUpdate        = Database['public']['Tables']['orders']['Update']
 
-export type Order = {
-  id: string
-  order_number: string       // SAV-0001 format
-  customer_id: string
-  status: OrderStatus
-  payment_method: PaymentMethod
-  payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
-  razorpay_order_id: string | null
-  razorpay_payment_id: string | null
-  subtotal: number
-  discount: number
-  shipping_charge: number
-  total: number
-  coupon_code: string | null
-  shipping_address: Address
-  items: OrderItem[]
-  shiprocket_order_id: string | null
-  awb_number: string | null
-  tracking_url: string | null
-  notes: string | null
-  created_at: string
-  updated_at: string
+export type OrderItem          = Database['public']['Tables']['order_items']['Row']
+export type OrderItemCustomization = Database['public']['Tables']['order_item_customizations']['Row']
+export type OrderEvent         = Database['public']['Tables']['order_events']['Row']
+
+export type PaymentAttempt     = Database['public']['Tables']['payment_attempts']['Row']
+
+export type Shipment           = Database['public']['Tables']['shipments']['Row']
+export type ShipmentInsert     = Database['public']['Tables']['shipments']['Insert']
+
+export type ReturnRequest      = Database['public']['Tables']['return_requests']['Row']
+export type ReturnItem         = Database['public']['Tables']['return_items']['Row']
+
+export type Coupon             = Database['public']['Tables']['coupons']['Row']
+export type CouponUse          = Database['public']['Tables']['coupon_uses']['Row']
+
+// ── Derived enums (sourced from DB CHECK constraints) ─────────
+export type OrderStatus   = Order['status']
+export type PaymentStatus = Order['payment_status']
+export type PaymentMethod = Order['payment_method']
+export type ShipmentStatus = Shipment['status']
+export type ReturnStatus  = ReturnRequest['status']
+
+// ── Composite types ───────────────────────────────────────────
+/** Full order for customer account / admin detail view */
+export type OrderWithDetails = Order & {
+  items:      (OrderItem & { customizations: OrderItemCustomization[] })[]
+  events:     OrderEvent[]
+  shipments:  Shipment[]
+  payment_attempts: PaymentAttempt[]
+  return_requests:  ReturnRequest[]
 }
 
-export type OrderItem = {
-  id: string
-  order_id: string
-  product_id: string
-  product_name: string       // snapshotted at order time
-  product_image_url: string  // snapshotted at order time
-  price: number              // snapshotted at order time
-  quantity: number
-  size: string | null
-  customizations: Record<string, string> | null
-}
-
-export type Address = {
+/** Shipping address as a plain value object (snapshotted on order) */
+export type ShippingAddress = {
   full_name: string
-  phone: string
-  line1: string
-  line2: string | null
-  city: string
-  state: string
-  pincode: string
-  country: string
+  phone:     string
+  line1:     string
+  line2:     string | null
+  city:      string
+  state:     string
+  pincode:   string
+  country:   string
 }

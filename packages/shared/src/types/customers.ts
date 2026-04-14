@@ -1,31 +1,28 @@
-export type CustomerSegment = 'new' | 'repeat' | 'vip' | 'at_risk' | 'dormant'
+import type { Database } from './database'
 
-export type Customer = {
-  id: string                  // matches Supabase auth.users.id
-  email: string
-  full_name: string | null
-  phone: string | null
-  segment: CustomerSegment
-  total_orders: number
-  total_spent: number
-  last_order_at: string | null
-  birthday: string | null     // MM-DD format for annual re-engagement
-  whatsapp_opted_in: boolean
-  email_opted_in: boolean
-  created_at: string
+// ── Row types ─────────────────────────────────────────────────
+export type Customer       = Database['public']['Tables']['customers']['Row']
+export type CustomerInsert = Database['public']['Tables']['customers']['Insert']
+export type CustomerUpdate = Database['public']['Tables']['customers']['Update']
+
+export type Address        = Database['public']['Tables']['addresses']['Row']
+export type AddressInsert  = Database['public']['Tables']['addresses']['Insert']
+export type AddressUpdate  = Database['public']['Tables']['addresses']['Update']
+
+export type AdminUser      = Database['public']['Tables']['admin_users']['Row']
+
+export type WishlistItem   = Database['public']['Tables']['wishlist_items']['Row']
+export type CartItem       = Database['public']['Tables']['cart_items']['Row']
+
+export type CustomerSegment = Database['public']['Tables']['customer_segments']['Row']
+
+// ── Composite types ───────────────────────────────────────────
+export type CustomerWithAddresses = Customer & {
+  addresses: Address[]
 }
 
-export type SavedAddress = {
-  id: string
-  customer_id: string
-  label: string               // 'Home', 'Work', etc.
-  is_default: boolean
-  full_name: string
-  phone: string
-  line1: string
-  line2: string | null
-  city: string
-  state: string
-  pincode: string
-  country: string
+/** Cart item enriched with product/variant info for display */
+export type CartItemWithProduct = CartItem & {
+  product: { name: string; slug: string; primary_image: string | null }
+  variant: { size: string; color: string | null; price_delta: number } | null
 }
