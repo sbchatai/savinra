@@ -1,151 +1,205 @@
 # SAVINRA — Project Status
 
 > This file is updated at the end of every session.
-> A new Claude Code session must read this file before doing anything.
+> A new Claude Code session MUST read this file before doing anything.
 
 ---
 
-## Quick state
+## Quick State
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1b — Backend Foundation |
-| Current stage | ✅ Schema live → start admin scaffold next |
-| Last session | 2026-04-14 |
+| Current phase | Phase 1c — Store + Admin wired to Supabase |
+| Current stage | 🔄 Auth + data hooks done. Admin CRUD pages + store wiring NEXT |
+| Last session | 2026-04-15 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
-| Live preview | https://savinra-store.vercel.app (shared with client) |
-| Last commit | c752c23 — feat: complete Phase 1b backend foundation |
+| Live preview | https://savinra-store.vercel.app (client reviewing) |
+| Last commit | 9e78a4f — feat: Phase 1c — store auth, Supabase data layer, Edge Functions, seed data |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
 
 ---
 
+## ⚠️ PUSH TO GITHUB FIRST
+
+The repo has local commits not yet pushed. Run this after getting the PAT:
+```
+GIT_CONFIG_NOSYSTEM=1 git -c "http.extraheader=Authorization: Basic <base64(x-access-token:PAT)>" push origin main
+```
+Or ask Sunil to push manually.
+
+---
+
 ## What was completed (cumulative)
 
-### Session 1 (2026-04-12/13)
-- [x] Scope locked — Phase 1 (store + admin + chatbot) and Phase 2 (all automations)
-- [x] Brand kit locked — savinra-brand-kit.md, logo.svg in assets/brand/
-- [x] Monorepo scaffold — apps/store, apps/admin, packages/shared
-- [x] Supabase project created — rzknetoapokbwmyhvqac, ap-south-1, free tier
-- [x] Brand tokens, utilities, architecture doc, UI spec (44 screens)
-- [x] GitHub repo live — https://github.com/sbchatai/savinra
+### Session 1 (2026-04-12/13) — Phase 0 Setup ✅
+- Scope locked, brand kit, monorepo scaffold, Supabase project, GitHub repo
 
-### Session 2 (2026-04-13/14)
-- [x] PostToolUse hooks — auto ESLint + Prettier on every .ts/.tsx save
-- [x] Agent team set up — ~/.claude/agents/ (architect, frontend-lead, backend-lead, qa-reviewer, deploy-ops, explorer, researcher, auditor)
-- [x] Skills installed — awesome-design, seo-expert, security-expert, database-expert, testing-strategy, debugging
-- [x] AGENTS.md — living handbook at D:/ai-lab/AGENTS.md
-- [x] 14-screen store prototype — all pages, premium UI, glassmorphism, framer-motion
-- [x] SVG logo wired in — header, footer, checkout (leaf on final A)
-- [x] Broken Unsplash images fixed — 3 URLs replaced with working alternatives
-- [x] Vercel auto-deploy fixed — root vercel.json + pnpm lockfile committed
-- [x] D:\Savinra archived → D:\ai-lab\archive\savinra-next-prototype (safe)
-- [x] UI live at https://savinra-store.vercel.app — shared with client 2026-04-14
+### Session 2 (2026-04-13/14) — Phase 1a UI ✅
+- Agent team (8 agents in ~/.claude/agents/), skills installed, AGENTS.md
+- 14-screen premium store UI built and deployed to Vercel
+- SVG logo wired, broken images fixed, auto-deploy via GitHub
 
-### Session 3 (2026-04-14) — Phase 1b Backend
-- [x] Supabase migrations 001–007 written and applied to live project
-  - 001: extensions, helpers, is_admin() function
-  - 002: customers, addresses, admin_users + auth triggers
-  - 003: collections, products, variants, images, reviews, customization options
-  - 004: cart_items, wishlist_items, coupons, coupon_uses
-  - 005: orders, order_items, shipments, returns, payment_attempts + auto-numbering
-  - 006: chat, abandoned_cart, WhatsApp logs, segments, AI images, inventory alerts
-  - 007: store_settings (seeded), FAQs (seeded), announcements, notification_logs
-- [x] RLS policies on every table (mandatory, zero exceptions)
-- [x] TypeScript types generated from Supabase schema → packages/shared/src/types/database.ts (57KB)
-- [x] Domain type files (products, customers, orders) rewritten as Database<> wrappers
-- [x] Razorpay webhook Edge Function — HMAC SHA256 verification + order status updates
-- [x] .env.example updated with all required variables
+### Session 3 (2026-04-14) — Phase 1b Backend ✅
+- Migrations 001–007: 35 tables with RLS + triggers (all live in Supabase)
+- TypeScript types generated (57KB database.ts)
+- Admin panel scaffold (apps/admin, 8 pages)
+- Razorpay webhook Edge Function
 
----
-
-## Pending client action
-
-- [ ] **Client UI approval** — client reviewing https://savinra-store.vercel.app
-  - Expected response: ~2 days from 2026-04-14
-  - Minor UI tweaks expected — checklist items won't require DB changes
+### Session 4 (2026-04-15) — Phase 1c Partial 🔄
+- **Migrations 008–009**: Storage buckets (product-images, brand-assets) + seed data
+  - 3 collections, 8 real products with craft stories, variants, images, reviews
+  - 3 coupons: WELCOME10, FESTIVE20, FLAT500
+  - 1 announcement: "Free shipping above ₹999"
+- **Edge Functions**:
+  - `create-razorpay-order`: full order creation, coupon validation, COD support
+  - `send-whatsapp`: WATI API with whatsapp_logs tracking
+- **Store auth layer**:
+  - `AuthContext` — Supabase session + customer row + modal control
+  - `AuthModal` — sign in / sign up / forgot password
+  - `UserMenu` — avatar dropdown (orders, wishlist, profile, sign out)
+  - `apps/store/src/lib/supabase.ts` — typed client
+  - `App.tsx` — wrapped with AuthProvider + AuthModal
+- **Store data hooks**:
+  - `useProducts(filters)` — filtered listing with primary image
+  - `useCollections()` — active collections
+  - `useProduct(slug)` — full detail with images, variants, reviews
+- **Committed**: 9e78a4f (not yet pushed to GitHub)
 
 ---
 
-## Next step (start here next session)
+## 🔥 NEXT SESSION — Start here
 
-**Immediate:** Begin admin panel scaffold (Point 4 — can proceed without client feedback).
+### Priority 1: Wire the store pages to real data
 
-1. **Admin panel scaffold** (`apps/admin/`)
-   - Already scaffolded; needs: routing, shadcn/ui init, layout shell
-   - Pages: Dashboard, Orders list, Order detail, Products, Customers, Settings
-   - Use shadcn/ui Table, Dialog, Badge, Form components
-   - Auth guard: admin_users check via Supabase
+**`apps/store/src/pages/HomePage.tsx`** — Replace placeholder collections/products with hooks:
+```tsx
+const { collections } = useCollections()
+const { products: bestsellers } = useProducts({ is_bestseller: true, limit: 4 })
+const { products: newArrivals } = useProducts({ is_new: true, limit: 4 })
+```
+Keep existing UI design exactly — just swap data source. Add skeleton loading states.
 
-2. **API contracts doc** — `docs/api-contracts.md`
-   - Edge Function signatures for: create-razorpay-order, razorpay-webhook, send-whatsapp
-   - Supabase query patterns for: product listing, cart sync, checkout
+**`apps/store/src/pages/CollectionsPage.tsx`** — use `useCollections()` hook
 
-3. **Deploy Razorpay webhook** — `supabase functions deploy razorpay-webhook`
-   - Requires: RAZORPAY_WEBHOOK_SECRET set (client to provide)
+**`apps/store/src/pages/CollectionDetailPage.tsx`** — use `useProducts({ collection_slug })` hook
+
+**`apps/store/src/pages/ProductDetailPage.tsx`** — use `useProduct(slug)` hook (get slug from useParams)
+
+**`apps/store/src/components/layout/SavinraHeader.tsx`** — Add `<UserMenu />` next to cart icon
+
+**`apps/store/src/pages/CheckoutPage.tsx`** — Guard: redirect to auth modal if not logged in
+
+### Priority 2: Admin Products page — full CRUD
+
+Rewrite `apps/admin/src/pages/ProductsPage.tsx` with:
+- Real data from Supabase `products` + `product_images`
+- Search, filter by active/all
+- Add/Edit via `ProductFormModal` (new component)
+- Image upload to `product-images` Storage bucket
+- Toggle active inline, delete with confirm
+
+Create `apps/admin/src/components/ProductFormModal.tsx`:
+- All product fields (name, slug auto-gen, price in ₹→paise, fabric, care, craft story)
+- Image upload with preview
+- Variants (size, color, sku, stock, price_delta)
+- Customization options (if customizable=true)
+
+### Priority 3: Admin Settings — fully functional
+
+Rewrite `apps/admin/src/pages/SettingsPage.tsx` with 5 tabs all wired to Supabase:
+- **Store Info**: name, email, phone, WhatsApp, social links, meta — saves to store_settings
+- **Shipping & Payments**: free shipping threshold, flat rate, COD toggle, GST — saves to store_settings
+- **Announcements**: list + add/edit/delete from store_announcements table
+- **FAQs**: list + add/edit/delete/reorder from faq_items table
+- **Notifications**: WhatsApp logs view (last 20 from whatsapp_logs)
+
+### Priority 4: Admin Collections + Coupons pages (new pages)
+
+Create `apps/admin/src/pages/CollectionsPage.tsx` + `CollectionFormModal.tsx`
+Create `apps/admin/src/pages/CouponsPage.tsx` + `CouponFormModal.tsx`
+Add routes + nav items in App.tsx + AdminLayout.tsx
 
 ---
 
-## Decisions locked (do not revisit)
+## Architecture: what's where
+
+```
+apps/store/src/
+  lib/supabase.ts          ← typed Supabase client
+  context/
+    AuthContext.tsx         ← auth state + customer row + modal control
+    CartContext.tsx         ← cart (local state)
+    WishlistContext.tsx     ← wishlist (local state)
+  hooks/
+    useProducts.ts          ← product listing with filters
+    useProduct.ts           ← single product full detail
+    useCollections.ts       ← collection listing
+  components/auth/
+    AuthModal.tsx           ← sign in / sign up / forgot password
+    UserMenu.tsx            ← header dropdown when logged in
+
+apps/admin/src/
+  lib/supabase.ts           ← admin Supabase client
+  context/AdminAuthContext.tsx ← admin auth (checks admin_users table)
+  components/
+    AdminLayout.tsx         ← sidebar + topbar
+    RequireAdmin.tsx        ← auth guard
+
+supabase/
+  functions/
+    razorpay-webhook/       ← HMAC verification + order status updates ✅
+    create-razorpay-order/  ← order creation + coupon + COD ✅
+    send-whatsapp/          ← WATI API + logging ✅
+  migrations/
+    001–009                 ← all applied to live Supabase project ✅
+```
+
+---
+
+## Decisions locked
 
 | Decision | Rationale |
 |---|---|
-| Monorepo (one repo, two apps) | Shared types + brand tokens, deploy separately |
-| n8n for automations, Edge Functions for transactional | Atomicity vs flexibility |
-| pnpm workspaces | Shared packages |
-| Supabase ap-south-1 | Lowest latency for Indian users |
-| No guest checkout | Re-engagement automations require accounts |
-| Razorpay | Indian payment methods (UPI, netbanking, COD) |
-| INR stored as paise (INTEGER) | No floating point rounding errors |
-| Order number format: SAV-YYYYMMDD-NNNN | Human-readable, sortable |
+| INR as INTEGER paise | No float rounding errors |
+| Order number SAV-YYYYMMDD-NNNN | Human-readable, sortable, date-contextual |
+| No guest checkout | Required for automation pipeline |
+| WATI for WhatsApp | Best Indian WhatsApp BSP, good API docs |
+| Supabase Storage | Integrated auth, RLS on files, CDN |
+| HMAC SHA256 on raw body for Razorpay | Industry standard, protects against fake events |
 
 ---
 
-## Credentials & config (pointer-only — never commit secrets)
+## Credentials (pointer-only — never commit secrets)
 
 | Secret | Location |
 |---|---|
-| Supabase service role key | Sunil has it — set in ~/.claude/settings.json for MCP |
-| Supabase anon key | From Supabase dashboard > API Settings |
-| GitHub PAT | Sunil has it — set in ~/.claude/settings.json for MCP |
-| Razorpay keys | Pending — client to create account and share |
-| WhatsApp API key | Pending — provider not yet chosen (Interakt vs AiSensy) |
-| fal.ai API key | Pending — for AI product image generation |
+| Supabase anon key | Supabase dashboard > API Settings |
+| Supabase service role key | Sunil has it — Supabase Vault + settings.json |
+| GitHub PAT | Sunil has it — needed for git push |
+| Razorpay keys | Pending — client to create account |
+| WATI API key | Pending — client to create WATI account |
 
 ---
 
-## Active blockers
-
-| Blocker | Owner | Required for |
-|---|---|---|
-| Client UI approval | Client (Savinra) | Any UI changes |
-| Razorpay account | Client | Payment integration, webhook deploy |
-| WhatsApp provider choice | Sunil | Phase 2 automations |
-
----
-
-## Phase roadmap
+## Phase Roadmap
 
 ```
-Phase 0 — Setup          ✅ DONE
-Phase 1a — UI Lock       ✅ DONE (client reviewing)
-Phase 1b — DB Schema     ✅ DONE (35 tables live in Supabase)
-Phase 1c — Store PWA     ⏳ After client feedback incorporated
-Phase 1d — Admin Panel   🔄 NEXT
-Phase 1e — Integrations  ⏳ Razorpay + Shiprocket + Chatbot
-Phase 2 — Automations    ⏳ After Phase 1 delivery
-Handover                 ⏳ End of Phase 2
+Phase 0 — Setup              ✅ DONE
+Phase 1a — UI Lock           ✅ DONE (client reviewing)
+Phase 1b — DB Schema         ✅ DONE (35 tables live)
+Phase 1c — Store + Admin     🔄 IN PROGRESS
+  ✅ Auth layer (AuthContext, AuthModal, UserMenu)
+  ✅ Data hooks (useProducts, useCollections, useProduct)
+  ✅ Edge Functions (create-razorpay-order, send-whatsapp)
+  ✅ Seed data (8 products, 3 collections, coupons)
+  ⏳ Wire store pages to real data (HomePage, PDP, Collections)
+  ⏳ Admin Products CRUD (ProductFormModal, image upload)
+  ⏳ Admin Settings (all 5 tabs functional)
+  ⏳ Admin Collections + Coupons pages
+Phase 1d — Admin Full Build   🔄 Partial (stubs done, CRUD next)
+Phase 1e — Integrations       ⏳ After 1c complete
+Phase 2 — Automations         ⏳ After Phase 1
+Handover                      ⏳ End of Phase 2
 ```
-
----
-
-## Reusability note
-
-When Savinra Phase 1 ships, extract as templates in `D:/ai-lab/templates/`:
-- `ecommerce-supabase/` — all 7 migrations, RLS policies, seed data
-- `razorpay-edge-fn/` — create-order + webhook handler
-- `shiprocket-wrapper/` — Deno API client
-- `whatsapp-n8n/` — order notification workflow JSONs
-- `ai-chatbot-widget/` — React widget + Edge Function
-- `admin-panel-scaffold/` — shadcn admin shell with auth guard
