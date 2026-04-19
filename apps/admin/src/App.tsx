@@ -10,6 +10,8 @@ import ProductsPage from '@/pages/ProductsPage'
 import ProductFormPage from '@/pages/ProductFormPage'
 import CustomersPage from '@/pages/CustomersPage'
 import SettingsPage from '@/pages/SettingsPage'
+import CollectionsPage from '@/pages/CollectionsPage'
+import CouponsPage from '@/pages/CouponsPage'
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
               <Route path="/products/:id/edit" element={<ProductFormPage />} />
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/collections" element={<CollectionsPage />} />
+              <Route path="/coupons" element={<CouponsPage />} />
             </Route>
           </Route>
 

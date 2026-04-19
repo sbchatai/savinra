@@ -61,6 +61,28 @@ const NAV_ITEMS: NavItem[] = [
       </svg>
     ),
   },
+  {
+    label: 'Collections',
+    path: '/collections',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="7" height="9" rx="1" />
+        <rect x="14" y="3" width="7" height="5" rx="1" />
+        <rect x="14" y="12" width="7" height="9" rx="1" />
+        <rect x="3" y="16" width="7" height="5" rx="1" />
+      </svg>
+    ),
+  },
+  {
+    label: 'Coupons',
+    path: '/coupons',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" />
+        <line x1="7" y1="7" x2="7.01" y2="7" />
+      </svg>
+    ),
+  },
 ]
 
 function getPageTitle(pathname: string): string {
@@ -72,6 +94,8 @@ function getPageTitle(pathname: string): string {
   if (pathname === '/products') return 'Products'
   if (pathname === '/customers') return 'Customers'
   if (pathname === '/settings') return 'Settings'
+  if (pathname === '/collections') return 'Collections'
+  if (pathname === '/coupons') return 'Coupons'
   return 'Admin'
 }
 
