@@ -84,61 +84,42 @@ Or ask Sunil to push manually.
   - **SavinraHeader**: UserMenu component already present ✅
   - **CheckoutPage**: Auth guard (redirects to sign-in if not logged in) + real order insert to `orders` + `order_items` tables ✅
   - **CartContext**: Added `variantId` field to CartItem interface ✅
-- **Committed**: 9e78a4f (not yet pushed to GitHub) — superseded by this session
+- **Committed**: `9e78a4f` (not yet pushed to GitHub) — superseded by this session
+
+### Session 6 (2026-04-19) — Admin Products CRUD ✅
+- **ProductFormPage fully built**:
+  - Image uploader: drag & drop → Supabase Storage `product-images` bucket, multi-image with primary selection, alt text, delete
+  - Variants editor: size/color/SKU/stock/price delta with add/remove, synced to `product_variants` table
+  - Collection multi-select: live from DB, pill toggles
+  - Craft story textarea added
+  - `in_stock` and `customizable` toggles added
+  - All fields save/upsert to Supabase on submit
+- **ProductsPage**: All/Active/Inactive filter tabs, inline activate/deactivate, soft-delete with confirm
+- **SettingsPage**: Fixed all DB column name mismatches (`store_email`, `store_phone`, `support_whatsapp`, `instagram_handle`, `gst_rate_percent`, `show_from`/`show_until`, `phone` not `recipient_phone`)
+- **tsconfig**: Added `vite/client` types to fix `ImportMeta.env` TS errors
+- **Committed + pushed**: `00db24d` ✅
 
 ---
 
 ## 🔥 NEXT SESSION — Start here
 
-### Priority 1: Wire the store pages to real data
+### Priority 1: Admin Collections + Coupons pages
 
-**`apps/store/src/pages/HomePage.tsx`** — Replace placeholder collections/products with hooks:
-```tsx
-const { collections } = useCollections()
-const { products: bestsellers } = useProducts({ is_bestseller: true, limit: 4 })
-const { products: newArrivals } = useProducts({ is_new: true, limit: 4 })
-```
-Keep existing UI design exactly — just swap data source. Add skeleton loading states.
+Create `apps/admin/src/pages/CollectionsPage.tsx` + `CollectionFormModal.tsx`:
+- List all collections from DB, add/edit/delete, cover image upload to `brand-assets`
+- Assign products to collections
 
-**`apps/store/src/pages/CollectionsPage.tsx`** — use `useCollections()` hook
+Create `apps/admin/src/pages/CouponsPage.tsx` + `CouponFormModal.tsx`:
+- List all coupons from DB, add/edit/delete with code, discount type, min order, expiry
+- Toggle active inline
 
-**`apps/store/src/pages/CollectionDetailPage.tsx`** — use `useProducts({ collection_slug })` hook
+Add routes + nav items in App.tsx + AdminLayout.tsx.
 
-**`apps/store/src/pages/ProductDetailPage.tsx`** — use `useProduct(slug)` hook (get slug from useParams)
-
-**`apps/store/src/components/layout/SavinraHeader.tsx`** — Add `<UserMenu />` next to cart icon
-
-**`apps/store/src/pages/CheckoutPage.tsx`** — Guard: redirect to auth modal if not logged in
-
-### Priority 2: Admin Products page — full CRUD
-
-Rewrite `apps/admin/src/pages/ProductsPage.tsx` with:
-- Real data from Supabase `products` + `product_images`
-- Search, filter by active/all
-- Add/Edit via `ProductFormModal` (new component)
-- Image upload to `product-images` Storage bucket
-- Toggle active inline, delete with confirm
-
-Create `apps/admin/src/components/ProductFormModal.tsx`:
-- All product fields (name, slug auto-gen, price in ₹→paise, fabric, care, craft story)
-- Image upload with preview
-- Variants (size, color, sku, stock, price_delta)
-- Customization options (if customizable=true)
-
-### Priority 3: Admin Settings — fully functional
-
-Rewrite `apps/admin/src/pages/SettingsPage.tsx` with 5 tabs all wired to Supabase:
-- **Store Info**: name, email, phone, WhatsApp, social links, meta — saves to store_settings
-- **Shipping & Payments**: free shipping threshold, flat rate, COD toggle, GST — saves to store_settings
-- **Announcements**: list + add/edit/delete from store_announcements table
-- **FAQs**: list + add/edit/delete/reorder from faq_items table
-- **Notifications**: WhatsApp logs view (last 20 from whatsapp_logs)
-
-### Priority 4: Admin Collections + Coupons pages (new pages)
-
-Create `apps/admin/src/pages/CollectionsPage.tsx` + `CollectionFormModal.tsx`
-Create `apps/admin/src/pages/CouponsPage.tsx` + `CouponFormModal.tsx`
-Add routes + nav items in App.tsx + AdminLayout.tsx
+### Priority 2: Phase 1e — Integrations
+- Wire `create-razorpay-order` Edge Function to checkout flow
+- Wire `send-whatsapp` Edge Function to order status updates
+- Configure Razorpay webhook URL in dashboard
+- Get WATI API key from client
 
 ---
 
@@ -214,8 +195,8 @@ Phase 1c — Store + Admin     🔄 IN PROGRESS
   ✅ Edge Functions (create-razorpay-order, send-whatsapp)
   ✅ Seed data (8 products, 3 collections, coupons)
   ✅ Wire store pages to real data (HomePage, PDP, Collections, Shop, Checkout, OrderConfirm)
-  ⏳ Admin Products CRUD (ProductFormModal, image upload)
-  ⏳ Admin Settings (all 5 tabs functional)
+  ✅ Admin Products CRUD (image upload, variants, collections, craft story)
+  ✅ Admin Settings (all 5 tabs functional, DB column names fixed)
   ⏳ Admin Collections + Coupons pages
 Phase 1d — Admin Full Build   🔄 Partial (stubs done, CRUD next)
 Phase 1e — Integrations       ⏳ After 1c complete
