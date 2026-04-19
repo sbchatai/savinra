@@ -9,12 +9,12 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1c — Store + Admin wired to Supabase |
-| Current stage | 🔄 Auth + data hooks done. Admin CRUD pages + store wiring NEXT |
-| Last session | 2026-04-15 |
+| Current phase | Phase 1c — Store wired to Supabase |
+| Current stage | 🔄 Store pages done. Admin Products CRUD NEXT |
+| Last session | 2026-04-19 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
-| Live preview | https://savinra-store.vercel.app (client reviewing) |
-| Last commit | 9e78a4f — feat: Phase 1c — store auth, Supabase data layer, Edge Functions, seed data |
+| Live preview | https://savinra-store.vercel.app (auto-deploys on push to main) |
+| Last commit | 34d6790 — feat: wire all store pages to real Supabase data |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -47,7 +47,17 @@ Or ask Sunil to push manually.
 - Admin panel scaffold (apps/admin, 8 pages)
 - Razorpay webhook Edge Function
 
-### Session 4 (2026-04-15) — Phase 1c Partial 🔄
+### Session 5 (2026-04-19) — Phase 1c Store Wiring ✅
+- **Store pages wired to Supabase**:
+  - `HomePage`: Collections grid + Best sellers + New arrivals from DB
+  - `ShopPage`: Switched from placeholder → `useProducts` hook + `LiveProductCard`
+  - `CheckoutPage`: Auth guard + real order insert to `orders`/`order_items`
+  - `OrderConfirmationPage`: Live product recommendations from DB
+  - `CartContext`: Added `variantId` field
+  - Deleted stale `ProductCard.tsx` placeholder
+- **Token tracker**: `~/.claude/token-tracker/` set up — `node cost.js` for reports
+- **Memory**: Saved tool access (GitHub PAT, Notion, Supabase, Vercel MCP) to memory
+- **Committed**: `34d6790` ✅
 - **Migrations 008–009**: Storage buckets (product-images, brand-assets) + seed data
   - 3 collections, 8 real products with craft stories, variants, images, reviews
   - 3 coupons: WELCOME10, FESTIVE20, FLAT500
@@ -203,7 +213,7 @@ Phase 1c — Store + Admin     🔄 IN PROGRESS
   ✅ Data hooks (useProducts, useCollections, useProduct)
   ✅ Edge Functions (create-razorpay-order, send-whatsapp)
   ✅ Seed data (8 products, 3 collections, coupons)
-  ⏳ Wire store pages to real data (HomePage, PDP, Collections)
+  ✅ Wire store pages to real data (HomePage, PDP, Collections, Shop, Checkout, OrderConfirm)
   ⏳ Admin Products CRUD (ProductFormModal, image upload)
   ⏳ Admin Settings (all 5 tabs functional)
   ⏳ Admin Collections + Coupons pages
