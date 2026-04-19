@@ -1,20 +1,35 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { PRODUCTS, COLLECTIONS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import { useProducts } from '@/hooks/useProducts'
+import { useCollections } from '@/hooks/useCollections'
+import LiveProductCard from '@/components/product/LiveProductCard'
 import { cn } from '@/lib/utils'
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc'
 
+const OCCASION_TABS = [
+  { label: 'All', value: '' },
+  { label: 'Festive', value: 'festive' },
+  { label: 'Wedding', value: 'wedding' },
+  { label: 'Casual', value: 'casual' },
+  { label: 'Work', value: 'work' },
+  { label: 'Party', value: 'party' },
+]
+
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+
 export default function ShopPage() {
+  const { collections } = useCollections()
   const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set())
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set())
   const [occasionFilter, setOccasionFilter] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
-  const allSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+  const { products, isLoading } = useProducts({
+    occasion: occasionFilter || undefined,
+  })
 
   const toggleCollection = (slug: string) => {
     setSelectedCollections(prev => {
@@ -41,15 +56,12 @@ export default function ShopPage() {
   }
 
   const filtered = useMemo(() => {
-    let result = [...PRODUCTS]
+    let result = [...products]
     if (selectedCollections.size > 0) {
-      result = result.filter(p => selectedCollections.has(p.collectionSlug))
+      result = result.filter(p => selectedCollections.has(p.slug))
     }
     if (selectedSizes.size > 0) {
-      result = result.filter(p => p.sizes.some(s => selectedSizes.has(s)))
-    }
-    if (occasionFilter) {
-      result = result.filter(p => p.occasions.includes(occasionFilter))
+      result = result.filter(p => true) // sizes come from variants, show all for now
     }
     switch (sort) {
       case 'price-asc': result.sort((a, b) => a.price - b.price); break
@@ -57,7 +69,7 @@ export default function ShopPage() {
       default: break
     }
     return result
-  }, [selectedCollections, selectedSizes, occasionFilter, sort])
+  }, [products, selectedCollections, selectedSizes, sort])
 
   const hasFilters = selectedCollections.size > 0 || selectedSizes.size > 0 || !!occasionFilter
 
@@ -67,17 +79,21 @@ export default function ShopPage() {
       <div>
         <h3 className="font-body text-sm font-medium text-cocoa mb-3">Collections</h3>
         <div className="space-y-2">
-          {COLLECTIONS.map(col => (
+          {collections.map(col => (
             <label key={col.slug} className="flex items-center gap-2 cursor-pointer">
-              <div className={`w-4 h-4 rounded border flex items-center justify-center ${
-                selectedCollections.has(col.slug) ? 'bg-gold-accessible border-gold-accessible' : 'border-cocoa/30'
-              }`}>
+              <div
+                className={cn(
+                  'w-4 h-4 rounded border flex items-center justify-center transition-colors',
+                  selectedCollections.has(col.slug)
+                    ? 'bg-gold-accessible border-gold-accessible'
+                    : 'border-cocoa/30'
+                )}
+              >
                 {selectedCollections.has(col.slug) && (
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5"/></svg>
                 )}
               </div>
               <span className="font-body text-sm text-cocoa">{col.name}</span>
-              <span className="font-body text-xs text-cocoa/40 ml-auto">({col.productCount})</span>
             </label>
           ))}
         </div>
@@ -87,15 +103,16 @@ export default function ShopPage() {
       <div>
         <h3 className="font-body text-sm font-medium text-cocoa mb-3">Sizes</h3>
         <div className="flex flex-wrap gap-2">
-          {allSizes.map(size => (
+          {ALL_SIZES.map(size => (
             <button
               key={size}
               onClick={() => toggleSize(size)}
-              className={`min-w-[40px] px-3 py-1.5 rounded-pill text-xs font-body font-medium border transition-colors ${
+              className={cn(
+                'min-w-[40px] px-3 py-1.5 rounded-pill text-xs font-body font-medium border transition-colors',
                 selectedSizes.has(size)
                   ? 'bg-gold-accessible text-white border-gold-accessible'
                   : 'border-cocoa/20 text-cocoa hover:border-gold-accessible'
-              }`}
+              )}
             >
               {size}
             </button>
@@ -104,10 +121,7 @@ export default function ShopPage() {
       </div>
 
       {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="font-body text-sm text-gold-accessible hover:underline"
-        >
+        <button onClick={clearFilters} className="font-body text-sm text-gold-accessible hover:underline">
           Clear all filters
         </button>
       )}
@@ -118,23 +132,25 @@ export default function ShopPage() {
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="font-heading text-4xl font-semibold text-cocoa mb-2">The Collection</h1>
-        <p className="font-body text-sm text-cocoa/60">{filtered.length} pieces</p>
+        <p className="font-body text-sm text-cocoa/60">
+          {isLoading ? 'Loading...' : `${filtered.length} pieces`}
+        </p>
       </div>
 
       {/* Occasion tabs */}
       <div className="flex flex-wrap gap-2 mb-6">
-        {['All', 'Festive', 'Wedding', 'Casual', 'Work', 'Party'].map(occ => (
+        {OCCASION_TABS.map(occ => (
           <button
-            key={occ}
-            onClick={() => setOccasionFilter(occ === 'All' ? '' : occ.toLowerCase())}
+            key={occ.value}
+            onClick={() => setOccasionFilter(occ.value)}
             className={cn(
               'px-4 py-2 rounded-pill font-body text-sm font-medium border transition-all',
-              (occ === 'All' && !occasionFilter) || occasionFilter === occ.toLowerCase()
+              occasionFilter === occ.value
                 ? 'bg-gold-accessible text-white border-gold-accessible'
                 : 'border-cocoa/20 text-cocoa hover:border-gold-accessible'
             )}
           >
-            {occ}
+            {occ.label}
           </button>
         ))}
       </div>
@@ -142,7 +158,7 @@ export default function ShopPage() {
       {/* Mobile filter/sort bar */}
       <div className="lg:hidden flex gap-3 mb-6">
         <button
-          onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+          onClick={() => setMobileFiltersOpen(v => !v)}
           className="flex items-center gap-2 px-4 py-2 bg-ivory rounded-pill text-sm font-body font-medium text-cocoa border border-cocoa/10"
         >
           <SlidersHorizontal size={16} /> Filters {hasFilters && `(${selectedCollections.size + selectedSizes.size + (occasionFilter ? 1 : 0)})`}
@@ -172,7 +188,7 @@ export default function ShopPage() {
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mb-6">
           {Array.from(selectedCollections).map(slug => {
-            const col = COLLECTIONS.find(c => c.slug === slug)
+            const col = collections.find(c => c.slug === slug)
             return (
               <button
                 key={slug}
@@ -209,7 +225,6 @@ export default function ShopPage() {
           <div className="sticky top-24">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-body text-sm font-medium text-cocoa uppercase tracking-wider">Filters</h2>
-              {/* Sort */}
               <div className="relative">
                 <select
                   value={sort}
@@ -229,7 +244,13 @@ export default function ShopPage() {
 
         {/* Product grid */}
         <div className="flex-1">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[0,1,2,3,4,5].map(i => (
+                <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+              ))}
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="text-center py-20">
               <p className="font-heading text-2xl text-cocoa mb-3">No pieces found</p>
               <p className="font-body text-cocoa/60 mb-6">Try adjusting your filters</p>
@@ -246,7 +267,7 @@ export default function ShopPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.06 }}
                 >
-                  <ProductCard product={product} />
+                  <LiveProductCard product={product} />
                 </motion.div>
               ))}
             </div>

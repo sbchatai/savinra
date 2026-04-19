@@ -65,7 +65,16 @@ Or ask Sunil to push manually.
   - `useProducts(filters)` — filtered listing with primary image
   - `useCollections()` — active collections
   - `useProduct(slug)` — full detail with images, variants, reviews
-- **Committed**: 9e78a4f (not yet pushed to GitHub)
+- **HomePage**: Collections grid (useCollections), Best sellers (useProducts), New arrivals (useProducts) ✅
+  - **CollectionDetailPage**: Already wired to useCollections + useProducts({ collection_slug }) ✅
+  - **ProductDetailPage**: Already wired to useProduct(slug) ✅
+  - **ShopPage**: Switched from PRODUCTS placeholder → useProducts hook + LiveProductCard ✅
+  - **CartPage**: Already using LiveProductCard + useProducts ✅
+  - **OrderConfirmationPage**: Switched from PRODUCTS → useProducts({ is_new: true }) ✅
+  - **SavinraHeader**: UserMenu component already present ✅
+  - **CheckoutPage**: Auth guard (redirects to sign-in if not logged in) + real order insert to `orders` + `order_items` tables ✅
+  - **CartContext**: Added `variantId` field to CartItem interface ✅
+- **Committed**: 9e78a4f (not yet pushed to GitHub) — superseded by this session
 
 ---
 

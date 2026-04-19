@@ -5,11 +5,12 @@ interface CartItem {
   product: Product
   size: string
   qty: number
+  variantId?: string
 }
 
 interface CartContextType {
   items: CartItem[]
-  addItem: (product: Product, size: string, qty?: number) => void
+  addItem: (product: Product, size: string, qty?: number, variantId?: string) => void
   removeItem: (productId: string, size: string) => void
   updateQty: (productId: string, size: string, qty: number) => void
   total: number
@@ -22,7 +23,7 @@ const CartContext = createContext<CartContextType | null>(null)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
-  const addItem = useCallback((product: Product, size: string, qty = 1) => {
+  const addItem = useCallback((product: Product, size: string, qty = 1, variantId?: string) => {
     setItems(prev => {
       const existing = prev.find(i => i.product.id === product.id && i.size === size)
       if (existing) {
@@ -32,7 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             : i
         )
       }
-      return [...prev, { product, size, qty }]
+      return [...prev, { product, size, qty, variantId }]
     })
   }, [])
 

@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, MessageCircle, ArrowRight, Package } from 'lucide-react'
-import { PRODUCTS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
+import { useProducts } from '@/hooks/useProducts'
+import LiveProductCard from '@/components/product/LiveProductCard'
 import SavinraHeader from '@/components/layout/SavinraHeader'
 import SavinraFooter from '@/components/layout/SavinraFooter'
 
-const ORDER_ID = 'ORD-2026-' + String(Math.floor(Math.random() * 9000) + 1000).padStart(4, '0')
-
 export default function OrderConfirmationPage() {
+  const { products: suggested, isLoading } = useProducts({ is_new: true, limit: 3 })
+
   return (
     <>
       <SavinraHeader />
@@ -26,7 +26,6 @@ export default function OrderConfirmationPage() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           <h1 className="font-heading text-4xl font-semibold text-cocoa mb-2">Order Confirmed!</h1>
           <p className="font-body text-cocoa/60 mb-1">Thank you for shopping with Savinra.</p>
-          <p className="font-body text-sm text-gold-accessible font-medium mb-8">{ORDER_ID}</p>
         </motion.div>
 
         {/* Order card */}
@@ -81,16 +80,24 @@ export default function OrderConfirmationPage() {
         </motion.div>
 
         {/* Recommended */}
-        <div className="border-t border-gold/20 pt-12 text-left">
-          <h2 className="font-heading text-2xl font-semibold text-cocoa mb-6">You May Also Love</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {PRODUCTS.slice(0, 3).map((p, i) => (
-              <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <ProductCard product={p} />
-              </motion.div>
-            ))}
+        {suggested.length > 0 && (
+          <div className="border-t border-gold/20 pt-12 text-left">
+            <h2 className="font-heading text-2xl font-semibold text-cocoa mb-6">You May Also Love</h2>
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[0,1,2].map(i => <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {suggested.map((p, i) => (
+                  <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+                    <LiveProductCard product={p} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
+        )}
       </main>
       <SavinraFooter />
     </>

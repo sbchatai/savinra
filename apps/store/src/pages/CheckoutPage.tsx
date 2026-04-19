@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronRight, Lock, Check } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { useAuth } from '@/context/AuthContext'
 import { formatPrice, cn } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
 
 type Step = 'delivery' | 'payment'
 
@@ -11,18 +13,107 @@ const STEPS = ['Cart', 'Delivery', 'Payment', 'Confirm']
 
 export default function CheckoutPage() {
   const { items, total, clearCart } = useCart()
+  const { user, customer, openAuthModal } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>('delivery')
   const [paymentMethod, setPaymentMethod] = useState('upi')
-  const [form, setForm] = useState({ email: '', fname: '', lname: '', phone: '', addr1: '', addr2: '', city: '', state: '', pincode: '' })
+  const [form, setForm] = useState({
+    email: customer?.email || user?.email || '',
+    fname: customer?.full_name?.split(' ')[0] ?? '',
+    lname: customer?.full_name?.split(' ').slice(1).join(' ') ?? '',
+    phone: customer?.phone ?? '',
+    addr1: '', addr2: '', city: '', state: '', pincode: '',
+  })
+  const [placing, setPlacing] = useState(false)
+  const [orderError, setOrderError] = useState<string | null>(null)
   const shipping = total >= 999 ? 0 : 99
   const grandTotal = total + shipping
 
   function update(field: string, val: string) { setForm(f => ({ ...f, [field]: val })) }
 
-  function placeOrder() {
-    clearCart()
-    navigate('/order-confirmation')
+  // Auth guard — redirect to sign-in if not logged in
+  useEffect(() => {
+    if (!user && step === 'delivery') {
+      openAuthModal('signin')
+    }
+  }, [user, step])
+
+  async function placeOrder() {
+    if (!user || items.length === 0) return
+    setPlacing(true)
+    setOrderError(null)
+
+    try {
+      const orderNumber = `SAV-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(Math.random() * 9000) + 1000}`
+      const fullName = [form.fname, form.lname].filter(Boolean).join(' ')
+      const subtotalPaise = Math.round(total * 100)
+      const shippingPaise = shipping * 100
+      const totalPaise = Math.round(grandTotal * 100)
+
+      const { data: order, error: orderErr } = await supabase
+        .from('orders')
+        .insert({
+          order_number: orderNumber,
+          customer_id: user.id,
+          shipping_name: fullName,
+          shipping_line1: form.addr1,
+          shipping_line2: form.addr2 || null,
+          shipping_city: form.city,
+          shipping_state: form.state,
+          shipping_pincode: form.pincode,
+          shipping_country: 'India',
+          shipping_phone: form.phone || customer?.phone || '',
+          subtotal: subtotalPaise,
+          shipping: shippingPaise,
+          discount: 0,
+          total: totalPaise,
+          payment_method: paymentMethod,
+          payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
+          status: 'confirmed',
+          is_cod: paymentMethod === 'cod',
+        })
+        .select()
+        .single()
+
+      if (orderErr || !order) throw new Error(orderErr?.message ?? 'Failed to create order')
+
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.product.id,
+        product_name: item.product.name,
+        variant_id: item.variantId ?? null,
+        variant_size: item.size,
+        qty: item.qty,
+        unit_price: Math.round(item.product.price * 100),
+        total: Math.round(item.product.price * item.qty * 100),
+      }))
+
+      const { error: itemsErr } = await supabase.from('order_items').insert(orderItems)
+      if (itemsErr) console.error('Failed to insert order items:', itemsErr)
+
+      clearCart()
+      navigate('/order-confirmation', { state: { orderId: order.id, orderNumber } })
+    } catch (err: unknown) {
+      setOrderError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setPlacing(false)
+    }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-parchment flex items-center justify-center px-4">
+        <div className="text-center">
+          <h2 className="font-heading text-2xl text-cocoa mb-3">Sign in to continue checkout</h2>
+          <p className="font-body text-sm text-cocoa/60 mb-6">Please sign in or create an account to place your order.</p>
+          <button
+            onClick={() => openAuthModal('signin')}
+            className="bg-gold-accessible text-white font-body font-medium px-8 py-3 rounded-pill hover:bg-cocoa transition-colors"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const inputCls = "w-full px-4 py-3 font-body text-sm text-cocoa bg-white border border-cocoa/20 rounded-card focus:outline-none focus:border-gold-accessible transition-colors placeholder:text-cocoa/35"
@@ -161,10 +252,21 @@ export default function CheckoutPage() {
                   <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={placeOrder}
-                    className="mt-6 w-full flex items-center justify-center gap-2 bg-gold-accessible text-white font-body font-medium py-3.5 rounded-pill hover:bg-cocoa transition-colors"
+                    disabled={placing}
+                    className="mt-6 w-full flex items-center justify-center gap-2 bg-gold-accessible text-white font-body font-medium py-3.5 rounded-pill hover:bg-cocoa transition-colors disabled:opacity-60"
                   >
-                    <Lock size={15} /> Place Order &middot; {formatPrice(grandTotal)}
+                    {placing ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+                        Placing Order...
+                      </span>
+                    ) : (
+                      <><Lock size={15} /> Place Order &middot; {formatPrice(grandTotal)}</>
+                    )}
                   </motion.button>
+                  {orderError && (
+                    <p className="text-center font-body text-xs text-error mt-2">{orderError}</p>
+                  )}
                   <p className="text-center font-body text-xs text-cocoa/40 mt-3 flex items-center justify-center gap-1">
                     <Lock size={11} /> Your payment is 100% secure & encrypted
                   </p>
