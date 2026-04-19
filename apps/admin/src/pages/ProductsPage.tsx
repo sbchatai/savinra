@@ -40,10 +40,24 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showActive, setShowActive] = useState<boolean | null>(null) // null = all
 
   useEffect(() => {
     loadProducts()
   }, [])
+
+  async function toggleActive(product: Product) {
+    await supabase.from('products').update({ is_active: !product.is_active }).eq('id', product.id)
+    setProducts((prev) =>
+      prev.map((p) => (p.id === product.id ? { ...p, is_active: !p.is_active } : p))
+    )
+  }
+
+  async function deleteProduct(product: Product) {
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return
+    await supabase.from('products').update({ deleted_at: new Date().toISOString() }).eq('id', product.id)
+    setProducts((prev) => prev.filter((p) => p.id !== product.id))
+  }
 
   async function loadProducts() {
     setIsLoading(true)
@@ -88,10 +102,14 @@ export default function ProductsPage() {
     }
   }
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.slug.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filtered = products.filter((p) => {
+    const matchesSearch =
+      !searchQuery ||
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.slug.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesActive = showActive === null || p.is_active === showActive
+    return matchesSearch && matchesActive
+  })
 
   return (
     <section aria-labelledby="products-heading">
@@ -99,14 +117,35 @@ export default function ProductsPage() {
 
       {/* Top bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <input
-          type="search"
-          placeholder="Search products..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="px-3 py-2 text-sm border border-admin-border rounded text-cocoa bg-parchment placeholder-cocoa/30 focus:outline-none focus:ring-2 focus:ring-gold/40 font-body w-64"
-          aria-label="Search products"
-        />
+        <div className="flex items-center gap-2">
+          <input
+            type="search"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-3 py-2 text-sm border border-admin-border rounded text-cocoa bg-parchment placeholder-cocoa/30 focus:outline-none focus:ring-2 focus:ring-gold/40 font-body w-64"
+            aria-label="Search products"
+          />
+          <div className="flex gap-1 bg-admin-border/30 p-0.5 rounded">
+            {([
+              [null, 'All'],
+              [true, 'Active'],
+              [false, 'Inactive'],
+            ] as [boolean | null, string][]).map(([val, label]) => (
+              <button
+                key={String(val)}
+                onClick={() => setShowActive(val)}
+                className={`px-3 py-1.5 text-xs font-medium rounded font-body transition-colors ${
+                  showActive === val
+                    ? 'bg-parchment text-cocoa shadow-sm'
+                    : 'text-cocoa/50 hover:text-cocoa'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
         <Link
           to="/products/new"
           className="inline-flex items-center gap-2 px-4 py-2 bg-cocoa text-parchment text-sm font-medium rounded-pill font-body hover:bg-cocoa/80 transition-colors"
@@ -196,14 +235,31 @@ export default function ProductsPage() {
                     <td className="px-6 py-3.5">
                       <StatusBadge active={product.is_active} />
                     </td>
-                    <td className="px-6 py-3.5 text-right">
-                      <Link
-                        to={`/products/${product.id}/edit`}
-                        className="text-xs text-gold-accessible hover:text-gold font-body font-medium transition-colors"
-                        aria-label={`Edit ${product.name}`}
-                      >
-                        Edit
-                      </Link>
+                    <td className="px-6 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          to={`/products/${product.id}/edit`}
+                          className="text-xs text-gold-accessible hover:text-gold font-body font-medium transition-colors"
+                          aria-label={`Edit ${product.name}`}
+                        >
+                          Edit
+                        </Link>
+                        <button
+                          onClick={() => toggleActive(product)}
+                          className="text-xs hover:underline font-body transition-colors"
+                          style={{ color: product.is_active ? '#f59e0b' : '#6b7280' }}
+                          aria-label={product.is_active ? `Deactivate ${product.name}` : `Activate ${product.name}`}
+                        >
+                          {product.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => deleteProduct(product)}
+                          className="text-xs text-error/60 hover:text-error font-body transition-colors"
+                          aria-label={`Delete ${product.name}`}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
