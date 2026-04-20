@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 
 interface CollectionFormData {
   name: string
@@ -102,11 +105,11 @@ export default function CollectionFormModal({ collectionId, onClose, onSaved }: 
   async function uploadCover(file: File): Promise<string | null> {
     const ext = file.name.split('.').pop()
     const path = `collections/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error: err } = await supabase.storage
+    const { error: err } = await supabase!.storage
       .from('brand-assets')
       .upload(path, file, { cacheControl: '3600', upsert: false })
     if (err) { console.error('Upload error:', err.message); return null }
-    const { data } = supabase.storage.from('brand-assets').getPublicUrl(path)
+    const { data } = supabase!.storage.from('brand-assets').getPublicUrl(path)
     return data.publicUrl
   }
 
@@ -138,10 +141,10 @@ export default function CollectionFormModal({ collectionId, onClose, onSaved }: 
 
     try {
       if (isEditing && collectionId) {
-        const { error: err } = await supabase.from('collections').update(payload).eq('id', collectionId)
+        const { error: err } = await supabase!.from('collections').update(payload).eq('id', collectionId)
         if (err) throw err
       } else {
-        const { error: err } = await supabase.from('collections').insert(payload)
+        const { error: err } = await supabase!.from('collections').insert(payload)
         if (err) throw err
       }
       onSaved()

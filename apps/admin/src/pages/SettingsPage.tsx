@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 import type { Database } from '@savinra/shared'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -192,7 +195,7 @@ function StoreInfoTab({ settings, reload }: { settings: StoreSettings | null; re
   async function save() {
     setSaving(true)
     setError(null)
-    const { error: err } = await (supabase.from('store_settings') as any).upsert({
+    const { error: err } = await supabase.from('store_settings').upsert({
       id: 1,
       store_name: storeName,
       store_email: email,
@@ -256,7 +259,7 @@ function ShippingTab({ settings, reload }: { settings: StoreSettings | null; rel
   async function save() {
     setSaving(true)
     setError(null)
-    const { error: err } = await (supabase.from('store_settings') as any).upsert({
+    const { error: err } = await supabase.from('store_settings').upsert({
       id: 1,
       free_shipping_above: Math.round(parseFloat(freeAbove || '0') * 100),
       flat_shipping_rate: Math.round(parseFloat(flatRate || '0') * 100),
@@ -335,7 +338,7 @@ function AnnouncementsTab() {
   useEffect(() => { load() }, [])
 
   async function toggleActive(id: string, current: boolean) {
-    await supabase.from('store_announcements').update({ is_active: !current }).eq('id', id)
+    await supabase!.from('store_announcements').update({ is_active: !current }).eq('id', id)
     setAnnouncements((prev) =>
       prev.map((a) => (a.id === id ? { ...a, is_active: !current } : a))
     )
@@ -343,7 +346,7 @@ function AnnouncementsTab() {
 
   async function deleteAnnouncement(id: string) {
     if (!confirm('Delete this announcement?')) return
-    const { error: err } = await supabase.from('store_announcements').delete().eq('id', id)
+    const { error: err } = await supabase!.from('store_announcements').delete().eq('id', id)
     if (err) { setError(err.message); return }
     setAnnouncements((prev) => prev.filter((a) => a.id !== id))
   }
@@ -351,7 +354,7 @@ function AnnouncementsTab() {
   async function addAnnouncement() {
     if (!newMessage.trim()) return
     setSaving(true)
-    const { error: err } = await supabase.from('store_announcements').insert({
+    const { error: err } = await supabase!.from('store_announcements').insert({
       message: newMessage.trim(),
       is_active: newActive,
       show_from: newStartsAt ? new Date(newStartsAt).toISOString() : new Date().toISOString(),
@@ -527,7 +530,7 @@ function FaqsTab() {
 
   async function deleteFaq(id: string) {
     if (!confirm('Delete this FAQ?')) return
-    const { error: err } = await supabase.from('faq_items').delete().eq('id', id)
+    const { error: err } = await supabase!.from('faq_items').delete().eq('id', id)
     if (err) { setError(err.message); return }
     setFaqs((prev) => prev.filter((f) => f.id !== id))
   }
@@ -536,7 +539,7 @@ function FaqsTab() {
     if (!newQuestion.trim() || !newAnswer.trim()) return
     setSaving(true)
     const maxOrder = faqs.reduce((m, f) => Math.max(m, f.sort_order), 0)
-    const { error: err } = await supabase.from('faq_items').insert({
+    const { error: err } = await supabase!.from('faq_items').insert({
       question: newQuestion.trim(),
       answer: newAnswer.trim(),
       sort_order: maxOrder + 1,
@@ -558,8 +561,8 @@ function FaqsTab() {
     const a = faqs[idx]
     const b = faqs[swapIdx]
     await Promise.all([
-      supabase.from('faq_items').update({ sort_order: b.sort_order }).eq('id', a.id),
-      supabase.from('faq_items').update({ sort_order: a.sort_order }).eq('id', b.id),
+      supabase!.from('faq_items').update({ sort_order: b.sort_order }).eq('id', a.id),
+      supabase!.from('faq_items').update({ sort_order: a.sort_order }).eq('id', b.id),
     ])
     load()
   }

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 import type { Database } from '@savinra/shared'
 
 type Order = Database['public']['Tables']['orders']['Row']

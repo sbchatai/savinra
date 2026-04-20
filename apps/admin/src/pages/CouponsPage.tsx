@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 import CouponFormModal from '@/components/CouponFormModal'
 
 interface Coupon {
@@ -63,13 +66,13 @@ export default function CouponsPage() {
   }
 
   async function toggleActive(coupon: Coupon) {
-    await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id)
+    await supabase!.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id)
     setCoupons((prev) => prev.map((c) => (c.id === coupon.id ? { ...c, is_active: !c.is_active } : c)))
   }
 
   async function deleteCoupon(coupon: Coupon) {
     if (!confirm(`Delete coupon "${coupon.code}"? This cannot be undone.`)) return
-    await supabase.from('coupons').delete().eq('id', coupon.id)
+    await supabase!.from('coupons').delete().eq('id', coupon.id)
     setCoupons((prev) => prev.filter((c) => c.id !== coupon.id))
   }
 

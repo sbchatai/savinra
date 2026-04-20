@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 
 // ─── Form data types ──────────────────────────────────────────────────────────
 
@@ -102,11 +105,11 @@ function ImageUploader({
   async function uploadFile(file: File): Promise<string | null> {
     const ext = file.name.split('.').pop()
     const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error } = await supabase.storage
+    const { error } = await supabase!.storage
       .from('product-images')
       .upload(path, file, { cacheControl: '3600', upsert: false })
     if (error) { console.error('Upload error:', error.message); return null }
-    const { data } = supabase.storage.from('product-images').getPublicUrl(path)
+    const { data } = supabase!.storage.from('product-images').getPublicUrl(path)
     return data.publicUrl
   }
 
@@ -150,10 +153,10 @@ function ImageUploader({
 
   async function deleteStoredImage(img: ImageEntry) {
     if (!img.id) return
-    await supabase.from('product_images').delete().eq('id', img.id)
+    await supabase!.from('product_images').delete().eq('id', img.id)
     if (img.url.includes('product-images')) {
       const path = img.url.split('/product-images/')[1]
-      if (path) await supabase.storage.from('product-images').remove([path])
+      if (path) await supabase!.storage.from('product-images').remove([path])
     }
   }
 
@@ -659,7 +662,7 @@ export default function ProductFormPage() {
       const storedIds = new Set(storedImages.map((img) => img.id))
       for (const curr of currentImages ?? []) {
         if (!storedIds.has(curr.id)) {
-          await supabase.from('product_images').delete().eq('id', curr.id)
+          await supabase!.from('product_images').delete().eq('id', curr.id)
         }
       }
 
@@ -667,14 +670,14 @@ export default function ProductFormPage() {
       for (const img of images) {
         if (!img.url || img.isUploading) continue
         if (img.id) {
-          await supabase.from('product_images').update({
+          await supabase!.from('product_images').update({
             url: img.url,
             alt_text: img.alt_text || null,
             sort_order: img.sort_order,
             is_primary: img.is_primary,
           }).eq('id', img.id)
         } else {
-          await supabase.from('product_images').insert({
+          await supabase!.from('product_images').insert({
             product_id: productId,
             url: img.url,
             alt_text: img.alt_text || null,
@@ -692,7 +695,7 @@ export default function ProductFormPage() {
       const storedVarIds = new Set(variants.filter((v) => v.id).map((v) => v.id!))
       for (const curr of currentVars ?? []) {
         if (!storedVarIds.has(curr.id)) {
-          await supabase.from('product_variants').delete().eq('id', curr.id)
+          await supabase!.from('product_variants').delete().eq('id', curr.id)
         }
       }
 
@@ -707,16 +710,16 @@ export default function ProductFormPage() {
           is_active: v.is_active,
         }
         if (v.id) {
-          await supabase.from('product_variants').update(varPayload).eq('id', v.id)
+          await supabase!.from('product_variants').update(varPayload).eq('id', v.id)
         } else {
-          await supabase.from('product_variants').insert(varPayload)
+          await supabase!.from('product_variants').insert(varPayload)
         }
       }
 
       // Save collection assignments
-      await supabase.from('collection_products').delete().eq('product_id', productId)
+      await supabase!.from('collection_products').delete().eq('product_id', productId)
       for (const collId of form.collection_ids) {
-        await supabase.from('collection_products').insert({ collection_id: collId, product_id: productId })
+        await supabase!.from('collection_products').insert({ collection_id: collId, product_id: productId })
       }
 
       navigate('/products')

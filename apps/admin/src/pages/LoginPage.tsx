@@ -14,8 +14,14 @@ export default function LoginPage() {
     setError(null)
     setIsLoading(true)
 
+    if (!supabase) {
+      setError('Supabase is not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase!.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
@@ -25,7 +31,6 @@ export default function LoginPage() {
         return
       }
 
-      // AdminAuthContext will handle the admin_users check and redirect
       navigate('/dashboard', { replace: true })
     } catch {
       setError('Something went wrong. Please try again.')

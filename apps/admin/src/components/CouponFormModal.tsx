@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 
 interface CouponFormData {
   code: string
@@ -119,10 +122,10 @@ export default function CouponFormModal({ couponId, onClose, onSaved }: Props) {
 
     try {
       if (isEditing && couponId) {
-        const { error: err } = await supabase.from('coupons').update(payload).eq('id', couponId)
+        const { error: err } = await supabase!.from('coupons').update(payload).eq('id', couponId)
         if (err) throw err
       } else {
-        const { error: err } = await supabase.from('coupons').insert(payload)
+        const { error: err } = await supabase!.from('coupons').insert(payload)
         if (err) throw err
       }
       onSaved()

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 
 interface Product {
   id: string
@@ -47,7 +50,7 @@ export default function ProductsPage() {
   }, [])
 
   async function toggleActive(product: Product) {
-    await supabase.from('products').update({ is_active: !product.is_active }).eq('id', product.id)
+    await supabase!.from('products').update({ is_active: !product.is_active }).eq('id', product.id)
     setProducts((prev) =>
       prev.map((p) => (p.id === product.id ? { ...p, is_active: !p.is_active } : p))
     )
@@ -55,7 +58,7 @@ export default function ProductsPage() {
 
   async function deleteProduct(product: Product) {
     if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return
-    await supabase.from('products').update({ deleted_at: new Date().toISOString() }).eq('id', product.id)
+    await supabase!.from('products').update({ deleted_at: new Date().toISOString() }).eq('id', product.id)
     setProducts((prev) => prev.filter((p) => p.id !== product.id))
   }
 

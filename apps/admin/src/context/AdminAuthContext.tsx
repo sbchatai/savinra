@@ -21,6 +21,13 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (!supabase) {
+      // No Supabase configured — redirect to login
+      setIsLoading(false)
+      navigate('/login', { replace: true })
+      return
+    }
+
     // Check current session on mount
     checkSession()
 
@@ -40,6 +47,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   async function checkSession() {
+    if (!supabase) return
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
@@ -55,6 +63,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function fetchAdminUser(userId: string) {
+    if (!supabase) return
     try {
       const { data, error } = await supabase
         .from('admin_users')
@@ -64,7 +73,6 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (error || !data) {
-        // Authenticated with Supabase but not in admin_users → reject
         await supabase.auth.signOut()
         setAdmin(null)
         navigate('/login', { replace: true })
@@ -78,7 +86,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signOut() {
-    await supabase.auth.signOut()
+    if (supabase) await supabase.auth.signOut()
     setAdmin(null)
     navigate('/login', { replace: true })
   }

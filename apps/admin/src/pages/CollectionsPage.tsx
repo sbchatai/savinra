@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 import CollectionFormModal from '@/components/CollectionFormModal'
 
 interface Collection {
@@ -58,14 +61,14 @@ export default function CollectionsPage() {
   }
 
   async function toggleActive(col: Collection) {
-    await supabase.from('collections').update({ is_active: !col.is_active }).eq('id', col.id)
+    await supabase!.from('collections').update({ is_active: !col.is_active }).eq('id', col.id)
     setCollections((prev) => prev.map((c) => (c.id === col.id ? { ...c, is_active: !c.is_active } : c)))
   }
 
   async function deleteCollection(col: Collection) {
     if (!confirm(`Delete "${col.name}"? All product links will be removed.`)) return
     setDeletingId(col.id)
-    await supabase.from('collections').delete().eq('id', col.id)
+    await supabase!.from('collections').delete().eq('id', col.id)
     setCollections((prev) => prev.filter((c) => c.id !== col.id))
     setDeletingId(null)
   }

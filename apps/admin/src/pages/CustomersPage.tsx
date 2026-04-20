@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase, assertSupabase } from '@/lib/supabase'
+
+// Guard: prevent runtime crash when Supabase env vars are missing
+
 
 interface Customer {
   id: string
