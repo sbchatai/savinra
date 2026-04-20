@@ -9,27 +9,29 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1c — Admin CRUD complete, Vercel build fix pending |
-| Current stage | 🔄 Admin Collections + Coupons done. Vercel build failing — Sunil to provide exact error next session |
+| Current phase | Phase 1e — Integrations |
+| Current stage | ✅ Both apps live and passing QA. Next: Razorpay + WhatsApp wiring |
 | Last session | 2026-04-20 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
-| Live preview | https://savinra-store.vercel.app (auto-deploys on push to main) |
-| Last commit | b6e3a2c — fix: regenerate pnpm-lock.yaml — missing supabase-js entries |
+| Live store | https://savinra-store.vercel.app ✅ READY |
+| Live admin | https://savinra-admin-chi.vercel.app ✅ READY |
+| Last commit | d2df6f0 — fix(store): correct Vercel outputDirectory to apps/store/dist |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
 
 ---
 
-## ⚠️ VERCEL BUILD FAILING — provide exact error next session
+## ✅ BOTH VERCEL DEPLOYMENTS LIVE (fixed 2026-04-20)
 
-The admin app fails to build on Vercel. pnpm-lock.yaml was regenerated but the build still fails.
-Sunil will provide the exact Vercel error message next session so we can diagnose and fix.
-
-Steps taken (insufficient):
-- Regenerated pnpm-lock.yaml with `pnpm install` — lockfile was missing @supabase/supabase-js entries
-- Committed as `b6e3a2c` and pushed to GitHub
-- Re-trigger Vercel build to confirm
+### What was broken and how it was fixed
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| Admin tsc build failed | 11 files imported `assertSupabase` which was never exported from `lib/supabase.ts` | Added `assertSupabase()` function to `lib/supabase.ts` |
+| Store wishlist badge showed "2" | WishlistContext pre-populated with fake IDs `['p2','p4']` | Changed to `new Set()` |
+| UserMenu links 404'd | Links pointed to `/account/orders` etc, routes defined at `/orders` | Fixed 3 routes in `UserMenu.tsx` |
+| Cart lost on refresh | `CartContext` used plain `useState([])` | Added lazy init + `useEffect` → `localStorage` persistence |
+| Store Vercel build error | `outputDirectory: "dist"` but build outputs to `apps/store/dist/` | Fixed to `"apps/store/dist"` in `vercel.json` |
 
 ---
 
@@ -66,6 +68,18 @@ Steps taken (insufficient):
 - **tsconfig**: Added `vite/client` types to fix `ImportMeta.env` TS errors
 - **Committed + pushed**: `00db24d` ✅
 
+### Session 8 (2026-04-20) — Full QA + All Bugs Fixed ✅
+- Diagnosed and fixed admin tsc build blocker: added `assertSupabase()` to `lib/supabase.ts`
+- Shipped Session 6/7 uncommitted code (CollectionsPage, CouponsPage, ProductFormPage, etc.)
+- Fixed SettingsPage `as any` type assertions
+- Fixed store UserMenu 3 broken routes (`/account/orders` → `/orders` etc.)
+- Fixed WishlistContext fake initial IDs `['p2','p4']` → empty `Set`
+- Added localStorage cart persistence to CartContext
+- Fixed root `vercel.json` outputDirectory (`dist` → `apps/store/dist`)
+- Created `D:/ai-lab/.claude/agents/savinra-qa.md` QA agent
+- **QA Result: 17 PASS, 0 FAIL** — both apps live and fully functional
+- Note: savinra-store.vercel.app needs to be added to Chrome extension allowlist for interactive QA
+
 ### Session 7 (2026-04-20) — Admin Collections + Coupons + Vercel fix attempt ✅
 - **CollectionsPage** (new): grid view with cover images, occasion badges, product counts, inline activate/delete
 - **CollectionFormModal** (new): cover image upload to `brand-assets` bucket, occasion select, SEO fields, slug auto-gen
@@ -80,28 +94,21 @@ Steps taken (insufficient):
 
 ## 🔥 NEXT SESSION — Start here
 
-### Priority 1: Fix Vercel admin build
-- Sunil to provide exact Vercel error message
-- Common fixes: add `vercel.json` with build config, or set `SKIP_BUILD_COMMAND`, or add `@supabase/supabase-js` to admin workspace explicitly
-- Once admin deploys: set up `admin.savinra.com` subdomain in Vercel + GoDaddy DNS
+### Priority 1: Set up admin.savinra.com subdomain
+- Vercel: add custom domain `admin.savinra.com` to savinra-admin project
+- GoDaddy DNS: add CNAME record `admin` → `cname.vercel-dns.com`
+- Verify SSL auto-provisions
 
 ### Priority 2: Phase 1e — Integrations
-
-Create `apps/admin/src/pages/CollectionsPage.tsx` + `CollectionFormModal.tsx`:
-- List all collections from DB, add/edit/delete, cover image upload to `brand-assets`
-- Assign products to collections
-
-Create `apps/admin/src/pages/CouponsPage.tsx` + `CouponFormModal.tsx`:
-- List all coupons from DB, add/edit/delete with code, discount type, min order, expiry
-- Toggle active inline
-
-Add routes + nav items in App.tsx + AdminLayout.tsx.
-
-### Priority 2: Phase 1e — Integrations
-- Wire `create-razorpay-order` Edge Function to checkout flow
+- Wire `create-razorpay-order` Edge Function to checkout flow (CheckoutPage.tsx)
 - Wire `send-whatsapp` Edge Function to order status updates
-- Configure Razorpay webhook URL in dashboard
+- Configure Razorpay webhook URL in Razorpay dashboard (requires client to create account)
 - Get WATI API key from client
+
+### Priority 3: Chrome extension domain allowlist
+- Add `savinra-store.vercel.app` to Claude-in-Chrome extension's allowed domains
+- This enables full interactive QA (click, JS inspect, screenshot) on the store
+- Without it the savinra-qa agent can only check HTTP responses for the store URL
 
 ---
 
@@ -171,9 +178,9 @@ supabase/
 Phase 0 — Setup              ✅ DONE
 Phase 1a — UI Lock           ✅ DONE (client reviewing)
 Phase 1b — DB Schema         ✅ DONE (35 tables live)
-Phase 1c — Store + Admin     🔄 All pages done, Vercel build fix pending
-Phase 1d — Admin Full Build   ✅ DONE
-Phase 1e — Integrations       ⏳ After Vercel fix + admin subdomain
-Phase 2 — Automations         ⏳ After Phase 1
-Handover                      ⏳ End of Phase 2
+Phase 1c — Store + Admin     ✅ DONE — both apps live, QA passed
+Phase 1d — Admin Full Build  ✅ DONE
+Phase 1e — Integrations      🔄 IN PROGRESS (Razorpay + WhatsApp + subdomain)
+Phase 2 — Automations        ⏳ After Phase 1
+Handover                     ⏳ End of Phase 2
 ```
