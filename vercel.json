@@ -1,5 +1,5 @@
 {
-  "buildCommand": "pnpm --filter store build",
+  "buildCommand": "cd apps/store && pnpm build",
   "outputDirectory": "apps/store/dist",
   "installCommand": "pnpm install",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
