@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { cn } from '@/lib/utils'
+import UserMenu from '@/components/auth/UserMenu'
 
 const NAV_LINKS = [
   { label: 'Collections', href: '/collections' },
@@ -87,9 +88,7 @@ export default function SavinraHeader() {
               </Link>
 
               {/* Account */}
-              <Link to="/account" className="hidden sm:block p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-ivory" aria-label="Account">
-                <User size={20} />
-              </Link>
+              <UserMenu />
 
               {/* Cart */}
               <Link to="/cart" className="relative p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-ivory" aria-label="Cart">

@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
-import { PRODUCTS } from '@/data/placeholder'
+import LiveProductCard from '@/components/product/LiveProductCard'
 import { useWishlist } from '@/context/WishlistContext'
-import ProductCard from '@/components/product/ProductCard'
+import { useProducts } from '@/hooks/useProducts'
 import AccountSidebar from '@/components/account/AccountSidebar'
 
 export default function WishlistPage() {
   const { ids } = useWishlist()
-  const wishlistProducts = PRODUCTS.filter(p => ids.has(p.id))
+  const { products, isLoading } = useProducts({ limit: 50 })
+  const wishlistProducts = products.filter(p => ids.has(p.id))
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -16,9 +17,17 @@ export default function WishlistPage() {
         <AccountSidebar />
         <div className="flex-1">
           <h1 className="font-heading text-3xl font-semibold text-cocoa mb-2">Saved Pieces</h1>
-          <p className="font-body text-sm text-cocoa/60 mb-8">{wishlistProducts.length} items</p>
+          <p className="font-body text-sm text-cocoa/60 mb-8">
+            {isLoading ? 'Loading...' : `${wishlistProducts.length} items`}
+          </p>
 
-          {wishlistProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+              ))}
+            </div>
+          ) : wishlistProducts.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -50,7 +59,7 @@ export default function WishlistPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
                 >
-                  <ProductCard product={p} />
+                  <LiveProductCard product={p} />
                 </motion.div>
               ))}
             </div>

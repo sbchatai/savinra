@@ -1,12 +1,33 @@
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { PRODUCTS, COLLECTIONS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
+import LiveProductCard from '@/components/product/LiveProductCard'
+import { useCollections } from '@/hooks/useCollections'
+import { useProducts } from '@/hooks/useProducts'
+
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&h=800&auto=format&fit=crop&q=80'
 
 export default function CollectionDetailPage() {
   const { slug } = useParams()
-  const collection = COLLECTIONS.find(c => c.slug === slug)
-  const products = PRODUCTS.filter(p => p.collectionSlug === slug)
+  const { collections, isLoading: collectionsLoading } = useCollections()
+  const { products, isLoading: productsLoading } = useProducts({ collection_slug: slug })
+
+  const collection = collections.find(c => c.slug === slug)
+
+  if (collectionsLoading) {
+    return (
+      <div>
+        <div className="h-[50vh] min-h-[320px] bg-ivory animate-pulse" />
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="h-6 w-48 bg-ivory rounded animate-pulse mb-8" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (!collection) {
     return (
@@ -24,8 +45,10 @@ export default function CollectionDetailPage() {
       {/* Banner */}
       <div className="relative h-[50vh] min-h-[320px]">
         <img
-          src={collection.coverImage}
+          src={collection.cover_image ?? FALLBACK_IMAGE}
           alt={collection.name}
+          width={1200}
+          height={600}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/30 to-transparent" />
@@ -44,8 +67,16 @@ export default function CollectionDetailPage() {
 
       {/* Products */}
       <div className="max-w-7xl mx-auto px-4 py-16">
-        <p className="font-body text-sm text-cocoa/60 mb-8">{products.length} pieces in this collection</p>
-        {products.length > 0 ? (
+        <p className="font-body text-sm text-cocoa/60 mb-8">
+          {productsLoading ? 'Loading...' : `${products.length} pieces in this collection`}
+        </p>
+        {productsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {products.map((p, i) => (
               <motion.div
@@ -54,7 +85,7 @@ export default function CollectionDetailPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
               >
-                <ProductCard product={p} />
+                <LiveProductCard product={p} />
               </motion.div>
             ))}
           </div>

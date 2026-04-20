@@ -1,8 +1,10 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronDown, Leaf, RotateCcw, Truck, MessageCircle, Star, Instagram } from 'lucide-react'
-import { PRODUCTS, COLLECTIONS, PRESS_MENTIONS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
+import { PRESS_MENTIONS } from '@/data/placeholder'
+import LiveProductCard from '@/components/product/LiveProductCard'
+import { useCollections } from '@/hooks/useCollections'
+import { useProducts } from '@/hooks/useProducts'
 
 const OCCASIONS = [
   { label: 'Festive', emoji: '\u2728', href: '/shop?occasion=festive' },
@@ -30,7 +32,13 @@ const INSTAGRAM_IMAGES = [
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }
 
+const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&h=800&auto=format&fit=crop&q=80'
+
 export default function HomePage() {
+  const { collections, isLoading: collectionsLoading } = useCollections()
+  const { products: bestsellers, isLoading: bestsellersLoading } = useProducts({ is_bestseller: true, limit: 4 })
+  const { products: newArrivals, isLoading: newArrivalsLoading } = useProducts({ is_new: true, limit: 4 })
+
   return (
     <div className="overflow-x-hidden">
 
@@ -125,46 +133,51 @@ export default function HomePage() {
           <p className="font-body text-xs uppercase tracking-[0.3em] text-gold-accessible mb-3">Curated</p>
           <h2 className="font-heading text-4xl font-semibold text-cocoa">Our Collections</h2>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {COLLECTIONS.map((col, i) => (
-            <motion.div
-              key={col.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.12 }}
-              whileHover={{ y: -4 }}
-              className="group relative overflow-hidden rounded-card shadow-card cursor-pointer"
-            >
-              <Link to={`/collections/${col.slug}`}>
-                <div className="aspect-[4/5] overflow-hidden">
-                  <img
-                    src={col.coverImage}
-                    alt={col.name}
-                    width={400}
-                    height={500}
-                    loading={i === 0 ? 'eager' : 'lazy'}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/10 to-transparent" />
-                <div className="absolute top-4 right-4 glass-gold px-3 py-1 rounded-full">
-                  <span className="font-body text-xs text-cocoa font-medium">{col.productCount} pieces</span>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <h3 className="font-heading text-2xl font-semibold text-white mb-1.5">{col.name}</h3>
-                  <p className="font-body text-sm text-white/80 mb-4 line-clamp-2">{col.description}</p>
-                  <span className="inline-flex items-center gap-1.5 text-gold-highlight text-sm font-body font-medium group-hover:gap-3 transition-all">
-                    Explore Collection <ArrowRight size={14} />
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
+        {collectionsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[0, 1, 2].map(i => (
+              <div key={i} className="aspect-[4/5] bg-ivory rounded-card animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {collections.map((col, i) => (
+              <motion.div
+                key={col.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12 }}
+                whileHover={{ y: -4 }}
+                className="group relative overflow-hidden rounded-card shadow-card cursor-pointer"
+              >
+                <Link to={`/collections/${col.slug}`}>
+                  <div className="aspect-[4/5] overflow-hidden">
+                    <img
+                      src={col.cover_image ?? FALLBACK_IMAGE}
+                      alt={col.name}
+                      width={400}
+                      height={500}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/10 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h3 className="font-heading text-2xl font-semibold text-white mb-1.5">{col.name}</h3>
+                    <p className="font-body text-sm text-white/80 mb-4 line-clamp-2">{col.description}</p>
+                    <span className="inline-flex items-center gap-1.5 text-gold-highlight text-sm font-body font-medium group-hover:gap-3 transition-all">
+                      Explore Collection <ArrowRight size={14} />
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Featured Products */}
+      {/* Featured Products — Bestsellers */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex items-end justify-between mb-12">
           <div>
@@ -175,19 +188,27 @@ export default function HomePage() {
             View all <ArrowRight size={14} />
           </Link>
         </motion.div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {PRODUCTS.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-            >
-              <ProductCard product={product} />
-            </motion.div>
-          ))}
-        </div>
+        {bestsellersLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[0, 1, 2, 3].map(i => (
+              <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bestsellers.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+              >
+                <LiveProductCard product={product} />
+              </motion.div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Brand Story */}

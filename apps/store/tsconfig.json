@@ -17,7 +17,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@savinra/shared": ["../../packages/shared/src/index.ts"],
+      "@savinra/shared/*": ["../../packages/shared/src/*"]
     }
   },
   "include": ["src"]

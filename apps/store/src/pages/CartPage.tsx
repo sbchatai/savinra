@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Minus, Plus, Trash2, ShoppingBag, Tag, Gift, ArrowRight } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
-import { PRODUCTS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
+import LiveProductCard from '@/components/product/LiveProductCard'
+import { useProducts } from '@/hooks/useProducts'
 import { formatPrice, cn } from '@/lib/utils'
 
 export default function CartPage() {
@@ -18,7 +18,10 @@ export default function CartPage() {
   const giftWrapFee = giftWrap ? 99 : 0
   const grandTotal = total - discount + shipping + giftWrapFee
 
-  const suggestedProducts = PRODUCTS.filter(p => !items.find(i => i.product.id === p.id)).slice(0, 3)
+  const { products: suggestedProducts, isLoading: suggestedLoading } = useProducts({ is_bestseller: true, limit: 3 })
+  // Filter out items already in cart
+  const cartProductIds = new Set(items.map(i => i.product.id))
+  const suggestions = suggestedProducts.filter(p => !cartProductIds.has(p.id))
 
   if (items.length === 0) {
     return (
@@ -228,19 +231,27 @@ export default function CartPage() {
       {suggestedProducts.length > 0 && (
         <section className="mt-16 border-t border-gold/20 pt-12">
           <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">You May Also Like</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {suggestedProducts.map((p, i) => (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <ProductCard product={p} />
-              </motion.div>
-            ))}
-          </div>
+          {suggestedLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="bg-ivory rounded-card animate-pulse h-80" />
+              ))}
+            </div>
+          ) : suggestions.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {suggestions.map((p, i) => (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <LiveProductCard product={p} />
+                </motion.div>
+              ))}
+            </div>
+          ) : null}
         </section>
       )}
     </div>

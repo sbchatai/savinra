@@ -1,9 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, ShoppingBag, Star, ChevronDown, ChevronRight, Truck, RotateCcw, Shield, Ruler, MapPin, Palette, Type } from 'lucide-react'
-import { PRODUCTS } from '@/data/placeholder'
-import ProductCard from '@/components/product/ProductCard'
+import { useProduct } from '@/hooks/useProduct'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { cn, formatPrice } from '@/lib/utils'
@@ -19,9 +18,7 @@ const SIZE_GUIDE = [
 
 export default function ProductDetailPage() {
   const { slug } = useParams<{ slug: string }>()
-  const product = PRODUCTS.find(p => p.slug === slug) ?? PRODUCTS[0]
-  const related = PRODUCTS.filter(p => p.id !== product.id && p.collectionSlug === product.collectionSlug).slice(0, 3)
-  const more = PRODUCTS.filter(p => p.id !== product.id).slice(0, 3)
+  const { product, isLoading, error } = useProduct(slug ?? '')
 
   const [activeImage, setActiveImage] = useState(0)
   const [selectedSize, setSelectedSize] = useState('')
@@ -35,34 +32,69 @@ export default function ProductDetailPage() {
 
   const { addItem } = useCart()
   const { toggle, has } = useWishlist()
+
+  // Reset active image when product changes
+  useEffect(() => {
+    setActiveImage(0)
+  }, [slug])
+
+  if (isLoading) return (
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-pulse">
+        <div className="aspect-[3/4] bg-cocoa/10 rounded-card" />
+        <div className="space-y-4">
+          <div className="h-8 bg-cocoa/10 rounded w-3/4" />
+          <div className="h-6 bg-cocoa/10 rounded w-1/2" />
+          <div className="h-4 bg-cocoa/10 rounded w-full" />
+          <div className="h-4 bg-cocoa/10 rounded w-4/5" />
+        </div>
+      </div>
+    </div>
+  )
+
+  if (error || !product) return (
+    <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+      <h1 className="font-heading text-3xl text-cocoa mb-4">Product not found</h1>
+      <Link to="/shop" className="text-gold-accessible font-body font-medium hover:underline">Browse all products</Link>
+    </div>
+  )
+
   const wishlisted = has(product.id)
   const avgRating = product.reviews.length > 0
     ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
     : 5
 
+  const sizes = [...new Set(product.variants.map(v => v.size))]
+  const imageUrls = product.images.map(img => img.url)
+
+  const priceInRupees = product.price / 100
+  const compareAtRupees = product.compare_at_price ? product.compare_at_price / 100 : undefined
+
+  const ACCORDIONS = [
+    { id: 'description', label: 'Description', content: product.description ?? '' },
+    { id: 'fabric', label: 'Fabric & Care', content: `Fabric: ${product.fabric ?? ''}\n\n${product.care_instructions ?? ''}` },
+    { id: 'craft', label: 'Craft Story', content: product.craft_story ?? '' },
+    { id: 'shipping', label: 'Shipping & Returns', content: 'Free standard shipping on orders above \u20b9999. Standard delivery: 5\u20137 business days. Express: 2\u20133 days.\n\n15-day hassle-free returns. Items must be unworn with original tags. Customised pieces are non-returnable.' },
+  ]
+
   function handleAddToCart() {
     if (!selectedSize) return
-    addItem(product, selectedSize, qty)
+    addItem(
+      { id: product!.id, name: product!.name, slug: product!.slug, price: priceInRupees, images: imageUrls, sizes, ...({} as any) },
+      selectedSize,
+      qty
+    )
     setAddedToCart(true)
     setTimeout(() => setAddedToCart(false), 2000)
   }
 
-  const ACCORDIONS = [
-    { id: 'description', label: 'Description', content: product.description },
-    { id: 'fabric', label: 'Fabric & Care', content: `Fabric: ${product.fabric}\n\n${product.care}` },
-    { id: 'craft', label: 'Craft Story', content: product.craftStory },
-    { id: 'shipping', label: 'Shipping & Returns', content: 'Free standard shipping on orders above \u20b9999. Standard delivery: 5\u20137 business days. Express: 2\u20133 days.\n\n15-day hassle-free returns. Items must be unworn with original tags. Customised pieces are non-returnable.' },
-  ]
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 font-body text-xs text-cocoa/50 mb-8">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 font-body text-xs text-cocoa/50 mb-8">
         <Link to="/" className="hover:text-gold-accessible transition-colors">Home</Link>
         <ChevronRight size={12} />
-        <Link to="/collections" className="hover:text-gold-accessible transition-colors">Collections</Link>
-        <ChevronRight size={12} />
-        <Link to={`/collections/${product.collectionSlug}`} className="hover:text-gold-accessible transition-colors">{product.collection}</Link>
+        <Link to="/shop" className="hover:text-gold-accessible transition-colors">Shop</Link>
         <ChevronRight size={12} />
         <span className="text-cocoa">{product.name}</span>
       </nav>
@@ -73,16 +105,23 @@ export default function ProductDetailPage() {
         <div className="flex flex-col-reverse lg:flex-row gap-4">
           {/* Thumbnails */}
           <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible">
-            {product.images.map((src, i) => (
+            {imageUrls.map((src, i) => (
               <button
                 key={i}
                 onClick={() => setActiveImage(i)}
+                aria-label={`View image ${i + 1}`}
                 className={cn(
                   'flex-shrink-0 w-16 h-20 lg:w-20 lg:h-24 rounded-card overflow-hidden border-2 transition-all',
                   activeImage === i ? 'border-gold-accessible' : 'border-transparent hover:border-gold/40'
                 )}
               >
-                <img src={src} alt={`${product.name} ${i + 1}`} className="w-full h-full object-cover" />
+                <img
+                  src={src}
+                  alt={product.images[i]?.alt_text ?? `${product.name} view ${i + 1}`}
+                  width={80}
+                  height={96}
+                  className="w-full h-full object-cover"
+                />
               </button>
             ))}
           </div>
@@ -92,8 +131,8 @@ export default function ProductDetailPage() {
             <AnimatePresence mode="wait">
               <motion.img
                 key={activeImage}
-                src={product.images[activeImage]}
-                alt={product.name}
+                src={imageUrls[activeImage]}
+                alt={product.images[activeImage]?.alt_text ?? product.name}
                 width={600}
                 height={800}
                 initial={{ opacity: 0 }}
@@ -103,7 +142,7 @@ export default function ProductDetailPage() {
                 className="w-full h-full object-cover"
               />
             </AnimatePresence>
-            {product.isNew && (
+            {product.is_new && (
               <div className="absolute top-4 left-4 glass-gold px-3 py-1 rounded-full">
                 <span className="font-body text-xs font-semibold text-gold-accessible uppercase tracking-wider">New Arrival</span>
               </div>
@@ -115,19 +154,16 @@ export default function ProductDetailPage() {
         <div className="flex flex-col">
           {/* Badge row */}
           <div className="flex items-center gap-2 mb-2">
-            {product.isBestseller && <span className="bg-gold-accessible text-white font-body text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">Bestseller</span>}
+            {product.is_bestseller && <span className="bg-gold-accessible text-white font-body text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">Bestseller</span>}
             {product.customizable && <span className="bg-sage text-white font-body text-[10px] uppercase tracking-wider font-semibold px-2.5 py-1 rounded-full">Customisable</span>}
           </div>
-
-          {/* Collection */}
-          <p className="font-body text-xs uppercase tracking-[0.3em] text-gold-accessible mb-2">{product.collection}</p>
 
           {/* Name */}
           <h1 className="font-heading text-3xl sm:text-4xl font-semibold text-cocoa mb-3 leading-tight">{product.name}</h1>
 
           {/* Rating */}
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex">
+            <div className="flex" aria-label={`Rating: ${avgRating.toFixed(1)} out of 5`}>
               {[1,2,3,4,5].map(s => <Star key={s} size={14} className={s <= Math.round(avgRating) ? 'text-gold fill-gold' : 'text-cocoa/20'} fill={s <= Math.round(avgRating) ? 'currentColor' : 'none'} />)}
             </div>
             <span className="font-body text-sm text-cocoa/60">{avgRating.toFixed(1)} ({product.reviews.length} reviews)</span>
@@ -135,12 +171,12 @@ export default function ProductDetailPage() {
 
           {/* Price */}
           <div className="flex items-baseline gap-3 mb-6">
-            <span className="font-heading text-3xl font-medium text-cocoa">{formatPrice(product.price)}</span>
-            {product.compareAtPrice && (
+            <span className="font-heading text-3xl font-medium text-cocoa">{formatPrice(priceInRupees)}</span>
+            {compareAtRupees && (
               <>
-                <span className="font-body text-lg text-sage line-through">{formatPrice(product.compareAtPrice)}</span>
+                <span className="font-body text-lg text-sage line-through">{formatPrice(compareAtRupees)}</span>
                 <span className="glass-gold font-body text-xs font-semibold text-success px-2 py-0.5 rounded-full">
-                  {Math.round((1 - product.price / product.compareAtPrice) * 100)}% off
+                  {Math.round((1 - priceInRupees / compareAtRupees) * 100)}% off
                 </span>
               </>
             )}
@@ -158,11 +194,12 @@ export default function ProductDetailPage() {
               </button>
             </div>
             <div className="flex flex-wrap gap-2">
-              {product.sizes.map(size => (
+              {sizes.map(size => (
                 <motion.button
                   key={size}
                   whileTap={{ scale: 0.93 }}
                   onClick={() => setSelectedSize(size)}
+                  aria-pressed={selectedSize === size}
                   className={cn(
                     'w-12 h-12 rounded-card font-body text-sm font-medium border-2 transition-all',
                     selectedSize === size
@@ -174,20 +211,21 @@ export default function ProductDetailPage() {
                 </motion.button>
               ))}
             </div>
-            {!selectedSize && <p className="mt-2 font-body text-xs text-error">Please select a size</p>}
+            {!selectedSize && <p className="mt-2 font-body text-xs text-error" role="alert">Please select a size</p>}
           </div>
 
           {/* Qty + Add to Cart */}
           <div className="flex gap-3 mb-4">
             <div className="flex items-center border border-cocoa/20 rounded-card">
-              <button onClick={() => setQty(q => Math.max(1, q - 1))} className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">&minus;</button>
-              <span className="px-4 py-2 font-body text-sm font-medium text-cocoa min-w-[3rem] text-center">{qty}</span>
-              <button onClick={() => setQty(q => q + 1)} className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">+</button>
+              <button onClick={() => setQty(q => Math.max(1, q - 1))} aria-label="Decrease quantity" className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">&minus;</button>
+              <span className="px-4 py-2 font-body text-sm font-medium text-cocoa min-w-[3rem] text-center" aria-live="polite">{qty}</span>
+              <button onClick={() => setQty(q => q + 1)} aria-label="Increase quantity" className="px-3 py-2 text-cocoa hover:text-gold-accessible transition-colors font-body text-lg">+</button>
             </div>
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleAddToCart}
               disabled={!selectedSize}
+              aria-disabled={!selectedSize}
               className={cn(
                 'flex-1 flex items-center justify-center gap-2 font-body text-sm font-medium py-3 rounded-pill transition-all duration-200',
                 addedToCart
@@ -206,6 +244,7 @@ export default function ProductDetailPage() {
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={() => toggle(product.id)}
+            aria-pressed={wishlisted}
             className={cn(
               'w-full flex items-center justify-center gap-2 border-2 font-body text-sm font-medium py-3 rounded-pill transition-all mb-6',
               wishlisted
@@ -230,6 +269,7 @@ export default function ProductDetailPage() {
                 placeholder="Enter PIN code"
                 value={pincode}
                 onChange={e => { setPincode(e.target.value.replace(/\D/g, '')); setPincodeChecked(false) }}
+                aria-label="PIN code for delivery check"
                 className="flex-1 px-3 py-2 text-sm font-body border border-cocoa/20 rounded-card bg-white focus:outline-none focus:border-gold-accessible"
               />
               <button
@@ -237,11 +277,11 @@ export default function ProductDetailPage() {
                 className="px-4 py-2 bg-gold-accessible text-white font-body text-sm font-medium rounded-card hover:bg-cocoa transition-colors"
               >Check</button>
             </div>
-            {pincodeChecked && <p className="mt-2 font-body text-xs text-success flex items-center gap-1"><Truck size={12} /> Delivery available &middot; Arrives in 5&ndash;7 business days</p>}
+            {pincodeChecked && <p className="mt-2 font-body text-xs text-success flex items-center gap-1" role="status"><Truck size={12} /> Delivery available &middot; Arrives in 5&ndash;7 business days</p>}
           </div>
 
           {/* Customisation */}
-          {product.customizable && product.customizationOptions.length > 0 && (
+          {product.customizable && product.customization_options.length > 0 && (
             <div className="glass-gold rounded-card p-4 mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <Palette size={16} className="text-gold-accessible" />
@@ -249,14 +289,16 @@ export default function ProductDetailPage() {
                 <span className="ml-auto font-body text-xs text-gold-accessible">Optional</span>
               </div>
               <div className="flex flex-col gap-4">
-                {product.customizationOptions.map(opt => (
+                {product.customization_options.map(opt => (
                   <div key={opt.id}>
-                    <label className="font-body text-xs font-medium text-cocoa/70 uppercase tracking-wide mb-1.5 block">{opt.label}</label>
+                    <label className="font-body text-xs font-medium text-cocoa/70 uppercase tracking-wide mb-1.5 block">
+                      {opt.label}{opt.is_required && <span className="text-error ml-0.5">*</span>}
+                    </label>
                     {opt.type === 'text' && (
                       <input
                         type="text"
-                        maxLength={opt.maxLength}
-                        placeholder={`Max ${opt.maxLength} characters`}
+                        maxLength={opt.max_length ?? undefined}
+                        placeholder={opt.max_length ? `Max ${opt.max_length} characters` : opt.label}
                         value={customizations[opt.id] || ''}
                         onChange={e => setCustomizations(c => ({ ...c, [opt.id]: e.target.value.toUpperCase() }))}
                         className="w-full px-3 py-2 text-sm font-body border border-cocoa/20 rounded-card bg-white/70 focus:outline-none focus:border-gold-accessible uppercase tracking-widest"
@@ -268,6 +310,7 @@ export default function ProductDetailPage() {
                           <button
                             key={choice}
                             onClick={() => setCustomizations(c => ({ ...c, [opt.id]: choice }))}
+                            aria-pressed={customizations[opt.id] === choice}
                             className={cn(
                               'px-3 py-1.5 rounded-full font-body text-xs border transition-all',
                               customizations[opt.id] === choice
@@ -297,7 +340,7 @@ export default function ProductDetailPage() {
               { icon: Shield, label: '100% authentic' },
             ].map((t, i) => (
               <div key={i} className="text-center">
-                <t.icon size={18} className="mx-auto text-sage mb-1" />
+                <t.icon size={18} className="mx-auto text-sage mb-1" aria-hidden="true" />
                 <p className="font-body text-[10px] text-cocoa/60 leading-tight">{t.label}</p>
               </div>
             ))}
@@ -309,16 +352,19 @@ export default function ProductDetailPage() {
               <div key={acc.id} className="border-b border-gold/20">
                 <button
                   onClick={() => setOpenAccordion(openAccordion === acc.id ? null : acc.id)}
+                  aria-expanded={openAccordion === acc.id}
+                  aria-controls={`accordion-${acc.id}`}
                   className="w-full flex items-center justify-between py-4 font-body text-sm font-medium text-cocoa text-left"
                 >
                   {acc.label}
                   <motion.div animate={{ rotate: openAccordion === acc.id ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown size={16} className="text-sage" />
+                    <ChevronDown size={16} className="text-sage" aria-hidden="true" />
                   </motion.div>
                 </button>
                 <AnimatePresence>
                   {openAccordion === acc.id && (
                     <motion.div
+                      id={`accordion-${acc.id}`}
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
@@ -338,17 +384,50 @@ export default function ProductDetailPage() {
       {/* Size Guide Modal */}
       <AnimatePresence>
         {showSizeGuide && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-cocoa/50 z-50 flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-parchment rounded-card p-6 max-w-lg w-full" onClick={e => e.stopPropagation()}>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-cocoa/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowSizeGuide(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Size Guide"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-parchment rounded-card p-6 max-w-lg w-full"
+              onClick={e => e.stopPropagation()}
+            >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-heading text-xl font-semibold text-cocoa">Size Guide</h3>
-                <button onClick={() => setShowSizeGuide(false)} className="text-cocoa/50 hover:text-cocoa">&times;</button>
+                <h2 className="font-heading text-xl font-semibold text-cocoa">Size Guide</h2>
+                <button onClick={() => setShowSizeGuide(false)} aria-label="Close size guide" className="text-cocoa/50 hover:text-cocoa text-xl leading-none">&times;</button>
               </div>
               <p className="font-body text-xs text-cocoa/60 mb-4">All measurements are in inches. Measure your body and match to the closest size.</p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm font-body">
-                  <thead><tr className="bg-gold-accessible text-white"><th className="py-2 px-3 text-left">Size</th><th className="py-2 px-3">Chest</th><th className="py-2 px-3">Waist</th><th className="py-2 px-3">Hip</th><th className="py-2 px-3">Length</th></tr></thead>
-                  <tbody>{SIZE_GUIDE.map((row, i) => (<tr key={row.size} className={i % 2 === 0 ? 'bg-ivory' : 'bg-white'}><td className="py-2 px-3 font-medium">{row.size}</td><td className="py-2 px-3 text-center">{row.chest}</td><td className="py-2 px-3 text-center">{row.waist}</td><td className="py-2 px-3 text-center">{row.hip}</td><td className="py-2 px-3 text-center">{row.length}</td></tr>))}</tbody>
+                  <thead>
+                    <tr className="bg-gold-accessible text-white">
+                      <th className="py-2 px-3 text-left">Size</th>
+                      <th className="py-2 px-3">Chest</th>
+                      <th className="py-2 px-3">Waist</th>
+                      <th className="py-2 px-3">Hip</th>
+                      <th className="py-2 px-3">Length</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SIZE_GUIDE.map((row, i) => (
+                      <tr key={row.size} className={i % 2 === 0 ? 'bg-ivory' : 'bg-white'}>
+                        <td className="py-2 px-3 font-medium">{row.size}</td>
+                        <td className="py-2 px-3 text-center">{row.chest}</td>
+                        <td className="py-2 px-3 text-center">{row.waist}</td>
+                        <td className="py-2 px-3 text-center">{row.hip}</td>
+                        <td className="py-2 px-3 text-center">{row.length}</td>
+                      </tr>
+                    ))}
+                  </tbody>
                 </table>
               </div>
               <p className="font-body text-xs text-cocoa/60 mt-3">When between sizes, we recommend sizing up. Our garments have a relaxed, comfortable fit.</p>
@@ -358,36 +437,34 @@ export default function ProductDetailPage() {
       </AnimatePresence>
 
       {/* Reviews */}
-      <section className="mt-16 border-t border-gold/20 pt-12">
-        <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Customer Reviews</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {product.reviews.map((review, i) => (
-            <motion.div key={review.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="bg-ivory rounded-card p-5 shadow-card">
-              <div className="flex items-center gap-1 mb-2">
-                {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= review.rating ? 'text-gold fill-gold' : 'text-cocoa/20'} fill={s <= review.rating ? 'currentColor' : 'none'} />)}
-              </div>
-              <p className="font-body text-sm text-cocoa/80 leading-relaxed mb-3 italic">&ldquo;{review.body}&rdquo;</p>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-body text-xs font-semibold text-cocoa">{review.name}</p>
-                  <p className="font-body text-[11px] text-sage">{review.location} &middot; {review.date}</p>
-                </div>
-                {review.verified && <span className="font-body text-[10px] text-success bg-success/10 px-2 py-0.5 rounded-full">Verified</span>}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Complete the Look */}
-      {(related.length > 0 || more.length > 0) && (
+      {product.reviews.length > 0 && (
         <section className="mt-16 border-t border-gold/20 pt-12">
-          <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Complete the Look</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {(related.length >= 3 ? related : more).slice(0, 3).map((p, i) => (
-              <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <ProductCard product={p} />
-              </motion.div>
+          <h2 className="font-heading text-3xl font-semibold text-cocoa mb-8">Customer Reviews</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {product.reviews.map((review, i) => (
+              <motion.article
+                key={review.id}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className="bg-ivory rounded-card p-5 shadow-card"
+              >
+                <div className="flex items-center gap-1 mb-2" aria-label={`Rating: ${review.rating} out of 5`}>
+                  {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= review.rating ? 'text-gold fill-gold' : 'text-cocoa/20'} fill={s <= review.rating ? 'currentColor' : 'none'} aria-hidden="true" />)}
+                </div>
+                <p className="font-body text-sm text-cocoa/80 leading-relaxed mb-3 italic">&ldquo;{review.body}&rdquo;</p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-body text-xs font-semibold text-cocoa">{review.reviewer_name}</p>
+                    <p className="font-body text-[11px] text-sage">
+                      {review.reviewer_location && <>{review.reviewer_location} &middot; </>}
+                      {new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                  {review.is_verified && <span className="font-body text-[10px] text-success bg-success/10 px-2 py-0.5 rounded-full">Verified</span>}
+                </div>
+              </motion.article>
             ))}
           </div>
         </section>

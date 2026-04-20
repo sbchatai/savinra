@@ -8,7 +8,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.43.0"
+    "@supabase/supabase-js": "^2.43.0",
+    "libphonenumber-js": "^1.12.41"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

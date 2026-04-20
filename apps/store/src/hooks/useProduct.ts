@@ -59,7 +59,7 @@ export function useProduct(slug: string) {
         images: [...(data.product_images ?? [])].sort((a, b) => a.sort_order - b.sort_order),
         variants: (data.product_variants ?? []).filter((v: { is_active: boolean }) => v.is_active),
         customization_options: [...(data.product_customization_options ?? [])].sort((a, b) => a.sort_order - b.sort_order),
-        reviews: (data.product_reviews ?? []).filter((r: { is_published?: boolean }) => r.is_published !== false),
+        reviews: (data.product_reviews ?? []).filter((r) => r.is_verified),
       })
       setIsLoading(false)
     }
