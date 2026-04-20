@@ -35,9 +35,13 @@ CREATE POLICY "admin_all_customers"  ON customers FOR ALL USING (is_admin());
 
 -- Auto-create customer row on signup
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
-  INSERT INTO customers (id, email, full_name)
+  INSERT INTO public.customers (id, email, full_name)
   VALUES (
     NEW.id,
     NEW.email,
@@ -45,7 +49,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
