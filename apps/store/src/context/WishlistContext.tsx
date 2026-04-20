@@ -9,7 +9,7 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | null>(null)
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [ids, setIds] = useState<Set<string>>(new Set(['p2', 'p4']))
+  const [ids, setIds] = useState<Set<string>>(new Set())
 
   const toggle = useCallback((id: string) => {
     setIds(prev => {

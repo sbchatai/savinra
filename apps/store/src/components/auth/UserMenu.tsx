@@ -55,7 +55,7 @@ export default function UserMenu() {
           </div>
 
           <Link
-            to="/account/orders"
+            to="/orders"
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 font-body text-sm text-cocoa hover:bg-parchment transition-colors"
           >
@@ -63,7 +63,7 @@ export default function UserMenu() {
             My Orders
           </Link>
           <Link
-            to="/account/wishlist"
+            to="/wishlist"
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 font-body text-sm text-cocoa hover:bg-parchment transition-colors"
           >
@@ -71,7 +71,7 @@ export default function UserMenu() {
             Wishlist
           </Link>
           <Link
-            to="/account/profile"
+            to="/account"
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 font-body text-sm text-cocoa hover:bg-parchment transition-colors"
           >

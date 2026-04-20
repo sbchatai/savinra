@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import type { Product } from '@/data/placeholder'
 
 interface CartItem {
@@ -20,8 +20,20 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null)
 
+const CART_KEY = 'savinra_cart'
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const stored = localStorage.getItem(CART_KEY)
+      return stored ? (JSON.parse(stored) as CartItem[]) : []
+    } catch { return [] }
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(items)) }
+    catch { /* quota exceeded or private browsing — ignore */ }
+  }, [items])
 
   const addItem = useCallback((product: Product, size: string, qty = 1, variantId?: string) => {
     setItems(prev => {
