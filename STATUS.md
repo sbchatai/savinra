@@ -9,25 +9,27 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1c — Store wired to Supabase |
-| Current stage | 🔄 Store pages done. Admin Products CRUD NEXT |
-| Last session | 2026-04-19 |
+| Current phase | Phase 1c — Admin CRUD complete, Vercel build fix pending |
+| Current stage | 🔄 Admin Collections + Coupons done. Vercel build failing — Sunil to provide exact error next session |
+| Last session | 2026-04-20 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
 | Live preview | https://savinra-store.vercel.app (auto-deploys on push to main) |
-| Last commit | 34d6790 — feat: wire all store pages to real Supabase data |
+| Last commit | b6e3a2c — fix: regenerate pnpm-lock.yaml — missing supabase-js entries |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
 
 ---
 
-## ⚠️ PUSH TO GITHUB FIRST
+## ⚠️ VERCEL BUILD FAILING — provide exact error next session
 
-The repo has local commits not yet pushed. Run this after getting the PAT:
-```
-GIT_CONFIG_NOSYSTEM=1 git -c "http.extraheader=Authorization: Basic <base64(x-access-token:PAT)>" push origin main
-```
-Or ask Sunil to push manually.
+The admin app fails to build on Vercel. pnpm-lock.yaml was regenerated but the build still fails.
+Sunil will provide the exact Vercel error message next session so we can diagnose and fix.
+
+Steps taken (insufficient):
+- Regenerated pnpm-lock.yaml with `pnpm install` — lockfile was missing @supabase/supabase-js entries
+- Committed as `b6e3a2c` and pushed to GitHub
+- Re-trigger Vercel build to confirm
 
 ---
 
@@ -48,43 +50,8 @@ Or ask Sunil to push manually.
 - Razorpay webhook Edge Function
 
 ### Session 5 (2026-04-19) — Phase 1c Store Wiring ✅
-- **Store pages wired to Supabase**:
-  - `HomePage`: Collections grid + Best sellers + New arrivals from DB
-  - `ShopPage`: Switched from placeholder → `useProducts` hook + `LiveProductCard`
-  - `CheckoutPage`: Auth guard + real order insert to `orders`/`order_items`
-  - `OrderConfirmationPage`: Live product recommendations from DB
-  - `CartContext`: Added `variantId` field
-  - Deleted stale `ProductCard.tsx` placeholder
-- **Token tracker**: `~/.claude/token-tracker/` set up — `node cost.js` for reports
-- **Memory**: Saved tool access (GitHub PAT, Notion, Supabase, Vercel MCP) to memory
-- **Committed**: `34d6790` ✅
-- **Migrations 008–009**: Storage buckets (product-images, brand-assets) + seed data
-  - 3 collections, 8 real products with craft stories, variants, images, reviews
-  - 3 coupons: WELCOME10, FESTIVE20, FLAT500
-  - 1 announcement: "Free shipping above ₹999"
-- **Edge Functions**:
-  - `create-razorpay-order`: full order creation, coupon validation, COD support
-  - `send-whatsapp`: WATI API with whatsapp_logs tracking
-- **Store auth layer**:
-  - `AuthContext` — Supabase session + customer row + modal control
-  - `AuthModal` — sign in / sign up / forgot password
-  - `UserMenu` — avatar dropdown (orders, wishlist, profile, sign out)
-  - `apps/store/src/lib/supabase.ts` — typed client
-  - `App.tsx` — wrapped with AuthProvider + AuthModal
-- **Store data hooks**:
-  - `useProducts(filters)` — filtered listing with primary image
-  - `useCollections()` — active collections
-  - `useProduct(slug)` — full detail with images, variants, reviews
-- **HomePage**: Collections grid (useCollections), Best sellers (useProducts), New arrivals (useProducts) ✅
-  - **CollectionDetailPage**: Already wired to useCollections + useProducts({ collection_slug }) ✅
-  - **ProductDetailPage**: Already wired to useProduct(slug) ✅
-  - **ShopPage**: Switched from PRODUCTS placeholder → useProducts hook + LiveProductCard ✅
-  - **CartPage**: Already using LiveProductCard + useProducts ✅
-  - **OrderConfirmationPage**: Switched from PRODUCTS → useProducts({ is_new: true }) ✅
-  - **SavinraHeader**: UserMenu component already present ✅
-  - **CheckoutPage**: Auth guard (redirects to sign-in if not logged in) + real order insert to `orders` + `order_items` tables ✅
-  - **CartContext**: Added `variantId` field to CartItem interface ✅
-- **Committed**: `9e78a4f` (not yet pushed to GitHub) — superseded by this session
+- Auth layer, data hooks, Edge Functions, seed data, wire store pages to real data
+- Superseded by Sessions 6 & 7 — see below for all completed work
 
 ### Session 6 (2026-04-19) — Admin Products CRUD ✅
 - **ProductFormPage fully built**:
@@ -99,11 +66,26 @@ Or ask Sunil to push manually.
 - **tsconfig**: Added `vite/client` types to fix `ImportMeta.env` TS errors
 - **Committed + pushed**: `00db24d` ✅
 
+### Session 7 (2026-04-20) — Admin Collections + Coupons + Vercel fix attempt ✅
+- **CollectionsPage** (new): grid view with cover images, occasion badges, product counts, inline activate/delete
+- **CollectionFormModal** (new): cover image upload to `brand-assets` bucket, occasion select, SEO fields, slug auto-gen
+- **CouponsPage** (new): table with copy-code, discount in INR/%, usage limits, expiry status badges, type badges
+- **CouponFormModal** (new): percentage/fixed type, min order, max cap, validity dates, usage limit
+- **App.tsx + AdminLayout**: routes + nav items for Collections and Coupons
+- **TypeScript fixes**: `type: data.type as 'percentage' | 'fixed'` cast in CouponFormModal
+- **Vercel build fix attempt**: regenerated pnpm-lock.yaml (was missing @supabase/supabase-js entries for admin/store workspaces) → committed `b6e3a2c` and pushed
+- ⚠️ **Vercel build still failing** — Sunil to provide exact error next session
+
 ---
 
 ## 🔥 NEXT SESSION — Start here
 
-### Priority 1: Admin Collections + Coupons pages
+### Priority 1: Fix Vercel admin build
+- Sunil to provide exact Vercel error message
+- Common fixes: add `vercel.json` with build config, or set `SKIP_BUILD_COMMAND`, or add `@supabase/supabase-js` to admin workspace explicitly
+- Once admin deploys: set up `admin.savinra.com` subdomain in Vercel + GoDaddy DNS
+
+### Priority 2: Phase 1e — Integrations
 
 Create `apps/admin/src/pages/CollectionsPage.tsx` + `CollectionFormModal.tsx`:
 - List all collections from DB, add/edit/delete, cover image upload to `brand-assets`
@@ -189,17 +171,9 @@ supabase/
 Phase 0 — Setup              ✅ DONE
 Phase 1a — UI Lock           ✅ DONE (client reviewing)
 Phase 1b — DB Schema         ✅ DONE (35 tables live)
-Phase 1c — Store + Admin     🔄 IN PROGRESS
-  ✅ Auth layer (AuthContext, AuthModal, UserMenu)
-  ✅ Data hooks (useProducts, useCollections, useProduct)
-  ✅ Edge Functions (create-razorpay-order, send-whatsapp)
-  ✅ Seed data (8 products, 3 collections, coupons)
-  ✅ Wire store pages to real data (HomePage, PDP, Collections, Shop, Checkout, OrderConfirm)
-  ✅ Admin Products CRUD (image upload, variants, collections, craft story)
-  ✅ Admin Settings (all 5 tabs functional, DB column names fixed)
-  ⏳ Admin Collections + Coupons pages
-Phase 1d — Admin Full Build   🔄 Partial (stubs done, CRUD next)
-Phase 1e — Integrations       ⏳ After 1c complete
+Phase 1c — Store + Admin     🔄 All pages done, Vercel build fix pending
+Phase 1d — Admin Full Build   ✅ DONE
+Phase 1e — Integrations       ⏳ After Vercel fix + admin subdomain
 Phase 2 — Automations         ⏳ After Phase 1
 Handover                      ⏳ End of Phase 2
 ```
