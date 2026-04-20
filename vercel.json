@@ -1,6 +1,7 @@
 {
+  "framework": "vite",
   "buildCommand": "cd apps/store && pnpm build",
-  "outputDirectory": "apps/store/dist",
+  "outputDirectory": "dist",
   "installCommand": "pnpm install",
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }
