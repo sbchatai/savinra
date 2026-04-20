@@ -15,7 +15,7 @@
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
 | Live store | https://savinra-store.vercel.app ✅ READY |
 | Live admin | https://savinra-admin-chi.vercel.app ✅ READY |
-| Last commit | d2df6f0 — fix(store): correct Vercel outputDirectory to apps/store/dist |
+| Last commit | 8b160dd — chore: trigger admin redeploy with Supabase env vars |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -89,6 +89,31 @@
 - **TypeScript fixes**: `type: data.type as 'percentage' | 'fixed'` cast in CouponFormModal
 - **Vercel build fix attempt**: regenerated pnpm-lock.yaml (was missing @supabase/supabase-js entries for admin/store workspaces) → committed `b6e3a2c` and pushed
 - ⚠️ **Vercel build still failing** — Sunil to provide exact error next session
+
+---
+
+## ✅ SESSION 9 (2026-04-20) — Admin Login Fixed + Full QA
+
+### What was fixed
+| Bug | Root Cause | Fix |
+|-----|-----------|-----|
+| Admin Vercel app calling `placeholder.supabase.co` | `VITE_SUPABASE_URL` + `VITE_SUPABASE_ANON_KEY` not set on either Vercel project | Set both env vars via Vercel API on both `savinra-admin` and `savinra-store` projects |
+| Admin login → 500 on admin_users query | `admin_owner_all` RLS policy used inline `SELECT FROM admin_users` inside a policy ON `admin_users` — infinite recursion | Added `is_admin_owner()` SECURITY DEFINER function; migration `010_fix_admin_rls_recursion.sql` applied live |
+
+### Admin QA result (2026-04-20)
+| Page | Result |
+|------|--------|
+| `/login` → `/dashboard` redirect | ✅ PASS |
+| Dashboard — stat cards, recent orders | ✅ PASS |
+| Orders — filter tabs, table loads | ✅ PASS |
+| Products — live data from Supabase | ✅ PASS |
+| Customers — loads | ✅ PASS |
+| Collections — loads | ✅ PASS |
+| Coupons — loads | ✅ PASS |
+| Settings — Store Info tab with real data | ✅ PASS |
+| Console errors | ✅ ZERO |
+
+Admin credentials: `admin@savinra.com` / `Savinra@Admin1` (owner role)
 
 ---
 
