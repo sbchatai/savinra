@@ -10,12 +10,12 @@
 | Field | Value |
 |---|---|
 | Current phase | Phase 1e — Integrations |
-| Current stage | ✅ Both apps live and passing QA. Next: Razorpay + WhatsApp wiring |
-| Last session | 2026-04-20 |
+| Current stage | ✅ All pages wired. Pending: client Razorpay keys + WATI API key |
+| Last session | 2026-04-21 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
 | Live store | https://savinra-store.vercel.app ✅ READY |
 | Live admin | https://savinra-admin-chi.vercel.app ✅ READY |
-| Last commit | 8b160dd — chore: trigger admin redeploy with Supabase env vars |
+| Last commit | 85d086c — feat(store+admin): wire all remaining stubs to real Supabase data |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -119,21 +119,20 @@ Admin credentials: `admin@savinra.com` / `Savinra@Admin1` (owner role)
 
 ## 🔥 NEXT SESSION — Start here
 
-### Priority 1: Set up admin.savinra.com subdomain
+### Priority 1: Get client credentials (BLOCKING for Razorpay + WhatsApp)
+- **Razorpay**: Client to create Razorpay account → get Key ID + Key Secret + Webhook Secret
+  - Set in Supabase Vault: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+  - Set webhook URL in Razorpay dashboard: `https://rzknetoapokbwmyhvqac.supabase.co/functions/v1/razorpay-webhook`
+- **WATI**: Client to create WATI account → get API key + Account ID + configure 6 message templates
+  - Set in Supabase Vault: `WATI_API_KEY`, `WATI_ACCOUNT_ID`
+  - Templates needed: `savinra_order_confirmed`, `savinra_order_shipped`, `savinra_order_delivered`, `savinra_abandoned_cart`, `savinra_promotion`, `savinra_otp`
+
+### Priority 2: Set up admin.savinra.com subdomain (at handover)
 - Vercel: add custom domain `admin.savinra.com` to savinra-admin project
 - GoDaddy DNS: add CNAME record `admin` → `cname.vercel-dns.com`
-- Verify SSL auto-provisions
-
-### Priority 2: Phase 1e — Integrations
-- Wire `create-razorpay-order` Edge Function to checkout flow (CheckoutPage.tsx)
-- Wire `send-whatsapp` Edge Function to order status updates
-- Configure Razorpay webhook URL in Razorpay dashboard (requires client to create account)
-- Get WATI API key from client
 
 ### Priority 3: Chrome extension domain allowlist
 - Add `savinra-store.vercel.app` to Claude-in-Chrome extension's allowed domains
-- This enables full interactive QA (click, JS inspect, screenshot) on the store
-- Without it the savinra-qa agent can only check HTTP responses for the store URL
 
 ---
 
