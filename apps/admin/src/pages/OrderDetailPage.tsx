@@ -37,6 +37,26 @@ function formatINR(amount: number) {
   }).format(amount)
 }
 
+function normalizePhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.startsWith('91') && digits.length === 12) return digits
+  if (digits.startsWith('0') && digits.length === 11) return '91' + digits.slice(1)
+  if (digits.length === 10) return '91' + digits
+  return digits
+}
+
+const STATUS_TO_TEMPLATE: Record<string, string> = {
+  confirmed: 'order_confirm',
+  shipped: 'shipped',
+  delivered: 'delivered',
+}
+
+const WA_TEMPLATES = [
+  { value: 'order_confirm', label: 'Order Confirmed' },
+  { value: 'shipped', label: 'Shipped' },
+  { value: 'delivered', label: 'Delivered' },
+]
+
 function formatDateTime(dateStr: string | null) {
   if (!dateStr) return '—'
   return new Date(dateStr).toLocaleString('en-IN', {
@@ -57,6 +77,10 @@ export default function OrderDetailPage() {
   const [isUpdating, setIsUpdating] = useState(false)
   const [newStatus, setNewStatus] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [waSending, setWaSending] = useState(false)
+  const [waSuccess, setWaSuccess] = useState(false)
+  const [waError, setWaError] = useState<string | null>(null)
+  const [waTemplate, setWaTemplate] = useState('')
 
   useEffect(() => {
     if (!id) return
@@ -79,6 +103,7 @@ export default function OrderDetailPage() {
 
       setOrder(orderData)
       setNewStatus(orderData.status)
+      setWaTemplate(STATUS_TO_TEMPLATE[orderData.status] ?? 'order_confirm')
 
       // Fetch order items
       const { data: itemData } = await supabase
@@ -115,6 +140,37 @@ export default function OrderDetailPage() {
     }
 
     setIsUpdating(false)
+  }
+
+  async function handleSendWhatsApp() {
+    if (!order) return
+    assertSupabase()
+    setWaSending(true)
+    setWaError(null)
+    setWaSuccess(false)
+
+    const phone = normalizePhone(order.shipping_phone ?? '')
+    const { error: fnError } = await supabase.functions.invoke('send-whatsapp', {
+      body: {
+        customer_id: order.customer_id ?? undefined,
+        phone,
+        template_name: waTemplate as 'order_confirm' | 'shipped' | 'delivered',
+        variables: {
+          order_number: order.order_number,
+          customer_name: order.shipping_name,
+          total: formatINR(order.total),
+        },
+        order_id: order.id,
+      },
+    })
+
+    if (fnError) {
+      setWaError('Failed to send WhatsApp message. Please try again.')
+    } else {
+      setWaSuccess(true)
+      setTimeout(() => setWaSuccess(false), 3000)
+    }
+    setWaSending(false)
   }
 
   if (isLoading) {
@@ -257,6 +313,39 @@ export default function OrderDetailPage() {
         </div>
         {error && (
           <p role="alert" className="mt-2 text-sm text-error font-body">{error}</p>
+        )}
+      </div>
+
+      {/* Notify customer */}
+      <div className="bg-parchment rounded-card shadow-card border border-admin-border p-5">
+        <h3 className="font-heading text-base font-medium text-cocoa mb-3">Notify Customer</h3>
+        <div className="flex flex-wrap items-center gap-3">
+          <select
+            value={waTemplate}
+            onChange={(e) => setWaTemplate(e.target.value)}
+            className="px-3 py-2 text-sm border border-admin-border rounded text-cocoa bg-white focus:outline-none focus:ring-2 focus:ring-gold/40 font-body"
+            aria-label="Select WhatsApp notification template"
+          >
+            {WA_TEMPLATES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+          <button
+            onClick={handleSendWhatsApp}
+            disabled={waSending}
+            className="px-4 py-2 bg-success text-white text-sm font-medium rounded-pill font-body hover:bg-success/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            aria-live="polite"
+          >
+            {waSending ? 'Sending...' : 'Send WhatsApp'}
+          </button>
+        </div>
+        {waSuccess && (
+          <p role="status" className="mt-2 text-sm text-success font-body font-medium">
+            WhatsApp sent ✓
+          </p>
+        )}
+        {waError && (
+          <p role="alert" className="mt-2 text-sm text-error font-body">{waError}</p>
         )}
       </div>
 
