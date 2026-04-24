@@ -9,13 +9,13 @@
 
 | Field | Value |
 |---|---|
-| Current phase | Phase 1e — Integrations |
-| Current stage | ✅ All pages wired. Pending: client Razorpay keys + WATI API key |
-| Last session | 2026-04-21 |
+| Current phase | Phase 1e — Client Feedback |
+| Current stage | ✅ SEO, mobile layout, categories done. Pending: Razorpay keys + WATI key + assign products to categories |
+| Last session | 2026-04-24 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
 | Live store | https://savinra-store.vercel.app ✅ READY |
 | Live admin | https://savinra-admin-chi.vercel.app ✅ READY |
-| Last commit | 85d086c — feat(store+admin): wire all remaining stubs to real Supabase data |
+| Last commit | 6604dfd — feat: mobile layout fixes, SEO foundation, categories system |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -68,6 +68,18 @@
 - **tsconfig**: Added `vite/client` types to fix `ImportMeta.env` TS errors
 - **Committed + pushed**: `00db24d` ✅
 
+### Session 10 (2026-04-24) — Client Feedback: Mobile + SEO + Categories ✅
+- **Mobile layout fixed**: all account/order/wishlist/returns pages use `flex-col lg:flex-row` — AccountSidebar tabs show correctly on mobile
+- **SEO foundation**: `react-helmet-async` installed, `SEOHead` component wired to every page with unique titles, descriptions, canonical, og:, JSON-LD
+- **Product JSON-LD** on ProductDetailPage, WebSite SearchAction on HomePage, BreadcrumbList on category/product pages
+- **sitemap.xml** + **manifest.json** (PWA) + **robots.txt** sitemap link
+- **Categories system**: migration 011 applied — 5 categories + 12 subcategories in Supabase
+- **DB-driven mega-menu** in SavinraHeader: desktop hover dropdown + mobile accordion tree, both fed from live Supabase `categories` table
+- **ShopCategoryPage**: `/shop/:categorySlug` and `/shop/:categorySlug/:subcategorySlug` — breadcrumbs, subcategory tiles, product grid
+- **Admin CategoriesPage**: full CRUD for categories and subcategories with image upload, accordion expand, inline edit/delete
+- ⚠️ Supabase project was auto-paused (free tier limit) — restored during session; Sunil should upgrade to Pro or manage active projects
+- Commit: `6604dfd`
+
 ### Session 8 (2026-04-20) — Full QA + All Bugs Fixed ✅
 - Diagnosed and fixed admin tsc build blocker: added `assertSupabase()` to `lib/supabase.ts`
 - Shipped Session 6/7 uncommitted code (CollectionsPage, CouponsPage, ProductFormPage, etc.)
@@ -119,7 +131,17 @@ Admin credentials: `admin@savinra.com` / `Savinra@Admin1` (owner role)
 
 ## 🔥 NEXT SESSION — Start here
 
-### Priority 1: Get client credentials (BLOCKING for Razorpay + WhatsApp)
+### Priority 0: ⚠️ Supabase project keeps auto-pausing (free tier limit)
+- Sunil has 2 active free projects — when Savinra pauses, restore it from Supabase dashboard
+- OR upgrade Savinra to Pro plan (recommended before handover)
+- Migration 011 is already applied to the live DB
+
+### Priority 1: Assign products to categories (quick win — admin UI is ready)
+- Go to Admin → Categories → see the 5 categories + 12 subcategories
+- Go to Admin → Products → edit each product → assign category_id / subcategory_id
+- Store category pages (`/shop/:categorySlug`) will immediately show products once assigned
+
+### Priority 2: Get client credentials (BLOCKING for Razorpay + WhatsApp)
 - **Razorpay**: Client to create Razorpay account → get Key ID + Key Secret + Webhook Secret
   - Set in Supabase Vault: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
   - Set webhook URL in Razorpay dashboard: `https://rzknetoapokbwmyhvqac.supabase.co/functions/v1/razorpay-webhook`
@@ -127,11 +149,15 @@ Admin credentials: `admin@savinra.com` / `Savinra@Admin1` (owner role)
   - Set in Supabase Vault: `WATI_API_KEY`, `WATI_ACCOUNT_ID`
   - Templates needed: `savinra_order_confirmed`, `savinra_order_shipped`, `savinra_order_delivered`, `savinra_abandoned_cart`, `savinra_promotion`, `savinra_otp`
 
-### Priority 2: Set up admin.savinra.com subdomain (at handover)
+### Priority 3: ProductFormPage — add category/subcategory selectors
+- `apps/admin/src/pages/ProductFormPage.tsx` needs two dropdowns: Category (from categories table) + Subcategory (filtered by selected category)
+- Currently the form has no category assignment UI
+
+### Priority 4: Set up admin.savinra.com subdomain (at handover)
 - Vercel: add custom domain `admin.savinra.com` to savinra-admin project
 - GoDaddy DNS: add CNAME record `admin` → `cname.vercel-dns.com`
 
-### Priority 3: Chrome extension domain allowlist
+### Priority 5: Chrome extension domain allowlist
 - Add `savinra-store.vercel.app` to Claude-in-Chrome extension's allowed domains
 
 ---
