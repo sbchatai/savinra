@@ -10,12 +10,12 @@
 | Field | Value |
 |---|---|
 | Current phase | Phase 1e — Client Feedback |
-| Current stage | ✅ SEO, mobile layout, categories done. Pending: Razorpay keys + WATI key + assign products to categories |
+| Current stage | ✅ SEO, mobile layout, categories, customization editor done. Pending: Razorpay keys + WATI key + assign products to categories |
 | Last session | 2026-04-24 |
 | GitHub repo | https://github.com/sbchatai/savinra (branch: main) |
 | Live store | https://savinra-store.vercel.app ✅ READY |
 | Live admin | https://savinra-admin-chi.vercel.app ✅ READY |
-| Last commit | 6604dfd — feat: mobile layout fixes, SEO foundation, categories system |
+| Last commit | b9f9d1e — feat(admin): full customization options editor + category selectors in ProductFormPage |
 | Supabase project | rzknetoapokbwmyhvqac (ap-south-1, Mumbai) |
 | Supabase URL | https://rzknetoapokbwmyhvqac.supabase.co |
 | Local path | D:/ai-lab/projects/savinra/ |
@@ -67,6 +67,15 @@
 - **SettingsPage**: Fixed all DB column name mismatches (`store_email`, `store_phone`, `support_whatsapp`, `instagram_handle`, `gst_rate_percent`, `show_from`/`show_until`, `phone` not `recipient_phone`)
 - **tsconfig**: Added `vite/client` types to fix `ImportMeta.env` TS errors
 - **Committed + pushed**: `00db24d` ✅
+
+### Session 11 (2026-04-24) — Admin: Customization Options Editor + Category Selectors ✅
+- **ProductFormPage — CustomizationOptionsEditor**: admin can add unlimited customization options, each with label, type (text/select/color), choices (for select/color), max length (for text), extra charge in ₹ (stored as paise), required toggle — all save/sync to `product_customization_options` table on submit
+- **ProductFormPage — CategorySelector**: cascading Category → Subcategory dropdowns, saves `category_id` / `subcategory_id` on the product; subcategory list filters dynamically when category changes
+- **Store ProductDetailPage**: customization option labels now show `+₹X` price delta badge when `price_delta > 0`
+- **Migration 012**: `ALTER TABLE product_customization_options ADD COLUMN price_delta INTEGER DEFAULT 0` — applied live to Supabase
+- **Shared DB types**: `price_delta` added to `product_customization_options` Row/Insert/Update so both apps typecheck cleanly
+- **Both tsc typechecks**: 0 errors ✅
+- Commit: `b9f9d1e`
 
 ### Session 10 (2026-04-24) — Client Feedback: Mobile + SEO + Categories ✅
 - **Mobile layout fixed**: all account/order/wishlist/returns pages use `flex-col lg:flex-row` — AccountSidebar tabs show correctly on mobile
@@ -149,11 +158,7 @@ Admin credentials: `admin@savinra.com` / `Savinra@Admin1` (owner role)
   - Set in Supabase Vault: `WATI_API_KEY`, `WATI_ACCOUNT_ID`
   - Templates needed: `savinra_order_confirmed`, `savinra_order_shipped`, `savinra_order_delivered`, `savinra_abandoned_cart`, `savinra_promotion`, `savinra_otp`
 
-### Priority 3: ProductFormPage — add category/subcategory selectors
-- `apps/admin/src/pages/ProductFormPage.tsx` needs two dropdowns: Category (from categories table) + Subcategory (filtered by selected category)
-- Currently the form has no category assignment UI
-
-### Priority 4: Set up admin.savinra.com subdomain (at handover)
+### Priority 3: Set up admin.savinra.com subdomain (at handover)
 - Vercel: add custom domain `admin.savinra.com` to savinra-admin project
 - GoDaddy DNS: add CNAME record `admin` → `cname.vercel-dns.com`
 
