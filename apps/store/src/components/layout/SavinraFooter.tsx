@@ -37,11 +37,11 @@ export default function SavinraFooter() {
               {[
                 { label: 'Shop All', href: '/shop' },
                 { label: 'Collections', href: '/collections' },
-                { label: 'New Arrivals', href: '/shop?sort=newest' },
-                { label: 'Bestsellers', href: '/shop?filter=bestseller' },
-                { label: 'Customise', href: '/shop?filter=customizable' },
+                { label: 'New Arrivals', href: '/shop' },
+                { label: 'Bestsellers', href: '/shop' },
+                { label: 'Customise', href: '/shop' },
               ].map(link => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link to={link.href} className="font-body text-sm text-parchment/65 hover:text-gold-highlight transition-colors">
                     {link.label}
                   </Link>
@@ -56,13 +56,13 @@ export default function SavinraFooter() {
             <ul className="space-y-3">
               {[
                 { label: 'FAQs', href: '/help' },
-                { label: 'Shipping Info', href: '/help#shipping' },
+                { label: 'Shipping Info', href: '/help' },
                 { label: 'Returns & Exchanges', href: '/returns' },
-                { label: 'Size Guide', href: '/help#sizing' },
+                { label: 'Size Guide', href: '/help' },
                 { label: 'Track Order', href: '/orders' },
-                { label: 'Contact Us', href: '/help#contact' },
+                { label: 'Contact Us', href: '/help' },
               ].map(link => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link to={link.href} className="font-body text-sm text-parchment/65 hover:text-gold-highlight transition-colors">
                     {link.label}
                   </Link>
@@ -78,7 +78,7 @@ export default function SavinraFooter() {
               New collections, craft stories and exclusive offers — delivered to your inbox.
             </p>
             {subscribed ? (
-              <p className="font-body text-sm text-sage">You're on the list!</p>
+              <p className="font-body text-sm text-sage">&#10003; You're subscribed!</p>
             ) : (
               <div className="flex gap-2">
                 <input
@@ -109,8 +109,8 @@ export default function SavinraFooter() {
         <div className="max-w-7xl mx-auto px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-body text-xs text-parchment/35">&copy; 2026 Savinra. All rights reserved.</p>
           <div className="flex items-center gap-5">
-            <Link to="/privacy" className="font-body text-xs text-parchment/35 hover:text-gold-highlight transition-colors">Privacy Policy</Link>
-            <Link to="/terms" className="font-body text-xs text-parchment/35 hover:text-gold-highlight transition-colors">Terms of Use</Link>
+            <Link to="/about" className="font-body text-xs text-parchment/35 hover:text-gold-highlight transition-colors">Privacy Policy</Link>
+            <Link to="/about" className="font-body text-xs text-parchment/35 hover:text-gold-highlight transition-colors">Terms of Use</Link>
             <span className="font-body text-xs text-parchment/20">Made with love in India</span>
           </div>
         </div>

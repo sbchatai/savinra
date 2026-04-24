@@ -13,6 +13,7 @@ import SettingsPage from '@/pages/SettingsPage'
 import CollectionsPage from '@/pages/CollectionsPage'
 import CategoriesPage from '@/pages/CategoriesPage'
 import CouponsPage from '@/pages/CouponsPage'
+import ChatbotPage from '@/pages/ChatbotPage'
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="/collections" element={<CollectionsPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/coupons" element={<CouponsPage />} />
+              <Route path="/chatbot" element={<ChatbotPage />} />
             </Route>
           </Route>
 

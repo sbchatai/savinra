@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
 import { useProducts } from '@/hooks/useProducts'
-import { useCollections } from '@/hooks/useCollections'
+import { useCategories } from '@/hooks/useCategories'
 import LiveProductCard from '@/components/product/LiveProductCard'
 import { cn } from '@/lib/utils'
 import SEOHead from '@/components/layout/SEOHead'
@@ -21,10 +22,14 @@ const OCCASION_TABS = [
 const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
 export default function ShopPage() {
-  const { collections } = useCollections()
-  const [selectedCollections, setSelectedCollections] = useState<Set<string>>(new Set())
+  const [searchParams] = useSearchParams()
+
+  const { categories } = useCategories()
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set())
-  const [occasionFilter, setOccasionFilter] = useState('')
+  const [occasionFilter, setOccasionFilter] = useState(() => searchParams.get('occasion') || '')
+  const [priceMin, setPriceMin] = useState('')
+  const [priceMax, setPriceMax] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
 
@@ -32,11 +37,11 @@ export default function ShopPage() {
     occasion: occasionFilter || undefined,
   })
 
-  const toggleCollection = (slug: string) => {
-    setSelectedCollections(prev => {
+  const toggleCategory = (id: string) => {
+    setSelectedCategories(prev => {
       const next = new Set(prev)
-      if (next.has(slug)) next.delete(slug)
-      else next.add(slug)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
   }
@@ -51,50 +56,68 @@ export default function ShopPage() {
   }
 
   const clearFilters = () => {
-    setSelectedCollections(new Set())
+    setSelectedCategories(new Set())
     setSelectedSizes(new Set())
     setOccasionFilter('')
+    setPriceMin('')
+    setPriceMax('')
   }
 
   const filtered = useMemo(() => {
     let result = [...products]
-    if (selectedCollections.size > 0) {
-      result = result.filter(p => selectedCollections.has(p.slug))
+
+    // Category filter
+    if (selectedCategories.size > 0) {
+      result = result.filter(p => (p as any).category_id && selectedCategories.has((p as any).category_id))
     }
+
+    // Size filter
     if (selectedSizes.size > 0) {
-      result = result.filter(p => true) // sizes come from variants, show all for now
+      result = result.filter(p =>
+        (p as any).variants?.some((v: { size: string; stock_count: number }) =>
+          selectedSizes.has(v.size) && v.stock_count > 0
+        ) ?? true
+      )
     }
+
+    // Price range (products stored in paise, inputs are rupees)
+    const minP = priceMin ? parseInt(priceMin) * 100 : 0
+    const maxP = priceMax ? parseInt(priceMax) * 100 : Infinity
+    if (priceMin || priceMax) {
+      result = result.filter(p => p.price >= minP && p.price <= maxP)
+    }
+
     switch (sort) {
       case 'price-asc': result.sort((a, b) => a.price - b.price); break
       case 'price-desc': result.sort((a, b) => b.price - a.price); break
       default: break
     }
     return result
-  }, [products, selectedCollections, selectedSizes, sort])
+  }, [products, selectedCategories, selectedSizes, priceMin, priceMax, sort])
 
-  const hasFilters = selectedCollections.size > 0 || selectedSizes.size > 0 || !!occasionFilter
+  const hasFilters = selectedCategories.size > 0 || selectedSizes.size > 0 || !!occasionFilter || !!priceMin || !!priceMax
 
   const FilterPanel = () => (
     <div className="space-y-8">
-      {/* Collections */}
+      {/* Categories */}
       <div>
-        <h3 className="font-body text-sm font-medium text-cocoa mb-3">Collections</h3>
+        <h3 className="font-body text-sm font-medium text-cocoa mb-3">Categories</h3>
         <div className="space-y-2">
-          {collections.map(col => (
-            <label key={col.slug} className="flex items-center gap-2 cursor-pointer">
+          {categories.map(cat => (
+            <label key={cat.id} className="flex items-center gap-2 cursor-pointer" onClick={() => toggleCategory(cat.id)}>
               <div
                 className={cn(
-                  'w-4 h-4 rounded border flex items-center justify-center transition-colors',
-                  selectedCollections.has(col.slug)
+                  'w-4 h-4 rounded border flex items-center justify-center transition-colors flex-shrink-0',
+                  selectedCategories.has(cat.id)
                     ? 'bg-gold-accessible border-gold-accessible'
                     : 'border-cocoa/30'
                 )}
               >
-                {selectedCollections.has(col.slug) && (
+                {selectedCategories.has(cat.id) && (
                   <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5"/></svg>
                 )}
               </div>
-              <span className="font-body text-sm text-cocoa">{col.name}</span>
+              <span className="font-body text-sm text-cocoa">{cat.name}</span>
             </label>
           ))}
         </div>
@@ -118,6 +141,34 @@ export default function ShopPage() {
               {size}
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* Price Range */}
+      <div>
+        <h3 className="font-body text-sm font-medium text-cocoa mb-3">Price Range</h3>
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cocoa/40 text-xs font-body">₹</span>
+            <input
+              type="number"
+              placeholder="Min"
+              value={priceMin}
+              onChange={e => setPriceMin(e.target.value)}
+              className="w-full bg-white border border-cocoa/20 rounded-lg pl-6 pr-3 py-2 text-xs font-body text-cocoa focus:outline-none focus:border-gold-accessible"
+            />
+          </div>
+          <span className="text-cocoa/40 text-xs">—</span>
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cocoa/40 text-xs font-body">₹</span>
+            <input
+              type="number"
+              placeholder="Max"
+              value={priceMax}
+              onChange={e => setPriceMax(e.target.value)}
+              className="w-full bg-white border border-cocoa/20 rounded-lg pl-6 pr-3 py-2 text-xs font-body text-cocoa focus:outline-none focus:border-gold-accessible"
+            />
+          </div>
         </div>
       </div>
 
@@ -167,7 +218,7 @@ export default function ShopPage() {
           onClick={() => setMobileFiltersOpen(v => !v)}
           className="flex items-center gap-2 px-4 py-2 bg-ivory rounded-pill text-sm font-body font-medium text-cocoa border border-cocoa/10"
         >
-          <SlidersHorizontal size={16} /> Filters {hasFilters && `(${selectedCollections.size + selectedSizes.size + (occasionFilter ? 1 : 0)})`}
+          <SlidersHorizontal size={16} /> Filters {hasFilters && `(${selectedCategories.size + selectedSizes.size + (occasionFilter ? 1 : 0) + (priceMin || priceMax ? 1 : 0)})`}
         </button>
         <div className="relative">
           <select
@@ -193,17 +244,17 @@ export default function ShopPage() {
       {/* Applied filter pills */}
       {hasFilters && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {Array.from(selectedCollections).map(slug => {
-            const col = collections.find(c => c.slug === slug)
-            return (
+          {Array.from(selectedCategories).map(id => {
+            const cat = categories.find(c => c.id === id)
+            return cat ? (
               <button
-                key={slug}
-                onClick={() => toggleCollection(slug)}
+                key={id}
+                onClick={() => toggleCategory(id)}
                 className="flex items-center gap-1 bg-gold-highlight/30 text-cocoa text-xs font-body px-3 py-1.5 rounded-pill"
               >
-                {col?.name} <X size={12} />
+                {cat.name} <X size={12} />
               </button>
-            )
+            ) : null
           })}
           {Array.from(selectedSizes).map(size => (
             <button
@@ -214,6 +265,14 @@ export default function ShopPage() {
               {size} <X size={12} />
             </button>
           ))}
+          {(priceMin || priceMax) && (
+            <button
+              onClick={() => { setPriceMin(''); setPriceMax('') }}
+              className="flex items-center gap-1 bg-gold-highlight/30 text-cocoa text-xs font-body px-3 py-1.5 rounded-pill"
+            >
+              ₹{priceMin || '0'} – ₹{priceMax || '∞'} <X size={12} />
+            </button>
+          )}
           {occasionFilter && (
             <button
               onClick={() => setOccasionFilter('')}

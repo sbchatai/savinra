@@ -8,11 +8,11 @@ import { useProducts } from '@/hooks/useProducts'
 import SEOHead from '@/components/layout/SEOHead'
 
 const OCCASIONS = [
-  { label: 'Festive', emoji: '\u2728', href: '/shop?occasion=festive' },
-  { label: 'Wedding', emoji: '\uD83D\uDC8D', href: '/shop?occasion=wedding' },
-  { label: 'Casual', emoji: '\u2600\uFE0F', href: '/shop?occasion=casual' },
-  { label: 'Work', emoji: '\uD83D\uDCBC', href: '/shop?occasion=work' },
-  { label: 'Party', emoji: '\uD83C\uDF19', href: '/shop?occasion=party' },
+  { label: 'Festive', emoji: '✨', href: '/shop?occasion=festive', bg: 'from-amber-50 to-yellow-100', border: 'border-amber-200', text: 'text-amber-900' },
+  { label: 'Wedding', emoji: '💍', href: '/shop?occasion=wedding', bg: 'from-rose-50 to-pink-100', border: 'border-rose-200', text: 'text-rose-900' },
+  { label: 'Casual', emoji: '☀️', href: '/shop?occasion=casual', bg: 'from-sky-50 to-blue-100', border: 'border-sky-200', text: 'text-sky-900' },
+  { label: 'Work', emoji: '💼', href: '/shop?occasion=work', bg: 'from-slate-50 to-gray-100', border: 'border-slate-200', text: 'text-slate-900' },
+  { label: 'Party', emoji: '🌙', href: '/shop?occasion=party', bg: 'from-violet-50 to-purple-100', border: 'border-violet-200', text: 'text-violet-900' },
 ]
 
 const TRUST_ITEMS = [
@@ -77,17 +77,29 @@ export default function HomePage() {
             Spring &middot; Summer 2026
           </motion.p>
           <motion.h1 variants={fadeUp} className="savinra-shine-animated font-heading font-bold text-7xl sm:text-8xl lg:text-9xl leading-none mb-4">
-            SAVINRA
+            <span>SAVINR</span>
+            <span className="relative inline-block">
+              A
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="absolute text-gold-highlight"
+                style={{ width: '0.3em', height: '0.3em', top: '-0.35em', left: '50%', transform: 'translateX(-50%)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
+              >
+                <path d="M10 1C10 1 4 5 4 11a6 6 0 0012 0C16 5 10 1 10 1zm0 3.5C10 3.5 7 7 7 11a3 3 0 006 0c0-4-3-6.5-3-6.5z" opacity="0.3"/>
+                <path d="M10 0C6 3 3 7 3 11a7 7 0 0014 0C17 7 14 3 10 0zm-.5 18.9A6 6 0 014 11c0-3.4 2.4-6.7 5.5-9.3V18.9z" />
+              </svg>
+            </span>
           </motion.h1>
           <motion.p variants={fadeUp} className="font-heading italic text-xl sm:text-2xl text-white/90 mb-8">
             House of Refined Living
           </motion.p>
           <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link to="/shop" className="inline-flex items-center gap-2 bg-gold-accessible text-white font-body font-medium text-sm px-8 py-3.5 rounded-pill hover:bg-cocoa transition-all duration-300 hover:scale-105">
-              Explore Collection <ArrowRight size={16} />
+              Shop Now <ArrowRight size={16} />
             </Link>
-            <Link to="/collections" className="inline-flex items-center gap-2 glass-dark text-white font-body font-medium text-sm px-8 py-3.5 rounded-pill hover:bg-white/10 transition-all duration-300">
-              Our Collections
+            <Link to="/about" className="inline-flex items-center gap-2 glass-dark text-white font-body font-medium text-sm px-8 py-3.5 rounded-pill hover:bg-white/10 transition-all duration-300">
+              Our Story
             </Link>
           </motion.div>
         </motion.div>
@@ -130,14 +142,21 @@ export default function HomePage() {
           <p className="font-body text-xs uppercase tracking-[0.3em] text-gold-accessible mb-3">Discover</p>
           <h2 className="font-heading text-4xl font-semibold text-cocoa">Shop by Occasion</h2>
         </motion.div>
-        <div className="flex flex-wrap justify-center gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
           {OCCASIONS.map((occ, i) => (
-            <motion.div key={occ.label} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.07 }}>
+            <motion.div
+              key={occ.label}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.07 }}
+            >
               <Link
                 to={occ.href}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-pill border border-gold/30 bg-ivory font-body text-sm text-cocoa hover:bg-gold-accessible hover:text-white hover:border-gold-accessible transition-all duration-200 hover:scale-105"
+                className={`group flex flex-col items-center justify-center gap-3 p-6 rounded-2xl bg-gradient-to-br ${occ.bg} border ${occ.border} hover:shadow-lg transition-all duration-300 hover:-translate-y-1 aspect-square`}
               >
-                <span>{occ.emoji}</span> {occ.label}
+                <span className="text-4xl group-hover:scale-110 transition-transform duration-200">{occ.emoji}</span>
+                <span className={`font-body font-semibold text-xs ${occ.text} uppercase tracking-widest`}>{occ.label}</span>
               </Link>
             </motion.div>
           ))}
@@ -151,13 +170,16 @@ export default function HomePage() {
           <h2 className="font-heading text-4xl font-semibold text-cocoa">Our Collections</h2>
         </motion.div>
         {collectionsLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {[0, 1, 2].map(i => (
-              <div key={i} className="aspect-[4/5] bg-ivory rounded-card animate-pulse" />
+              <div key={i} className="min-w-[280px] sm:min-w-[340px] flex-shrink-0 aspect-[4/5] bg-ivory rounded-card animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
             {collections.map((col, i) => (
               <motion.div
                 key={col.id}
@@ -166,7 +188,7 @@ export default function HomePage() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.12 }}
                 whileHover={{ y: -4 }}
-                className="group relative overflow-hidden rounded-card shadow-card cursor-pointer"
+                className="min-w-[280px] sm:min-w-[340px] flex-shrink-0 group relative overflow-hidden rounded-card shadow-card cursor-pointer"
               >
                 <Link to={`/collections/${col.slug}`}>
                   <div className="aspect-[4/5] overflow-hidden">
@@ -238,13 +260,13 @@ export default function HomePage() {
                 Where Heritage<br />Meets Now
               </h2>
               <p className="font-body text-base text-white/70 leading-relaxed mb-6">
-                Savinra was born from a belief that India's extraordinary textile traditions deserve a place in the modern wardrobe. We work directly with master artisans across Varanasi, Rajasthan, Chanderi, and Kutch &mdash; preserving centuries-old craft while creating silhouettes for today.
+                Savinra is where India's extraordinary textile heritage meets modern design sensibility. We design for the woman who moves fluidly between tradition and modernity — who wears a hand-block printed kurta to a board meeting and a silk co-ord to a wedding.
               </p>
               <p className="font-body text-base text-white/70 leading-relaxed mb-8">
-                Every piece carries a story &mdash; of the hands that made it, the technique that shaped it, and the tradition that lives in its threads.
+                Our pieces are designed in India, crafted with natural fibres, and shaped by silhouettes that feel entirely of this moment. Not ethnic wear. Not Western wear. Indo-Western — a category we believe should have its own identity.
               </p>
               <Link to="/about" className="inline-flex items-center gap-2 glass-gold text-gold-highlight font-body text-sm font-medium px-6 py-3 rounded-pill hover:bg-gold/20 transition-all">
-                Our Craft Philosophy <ArrowRight size={14} />
+                Our Story <ArrowRight size={14} />
               </Link>
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="grid grid-cols-3 gap-4 text-center">

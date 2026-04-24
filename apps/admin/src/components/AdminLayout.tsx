@@ -88,6 +88,15 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'Chatbot',
+    path: '/chatbot',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+      </svg>
+    ),
+  },
+  {
     label: 'Coupons',
     path: '/coupons',
     icon: (
@@ -111,6 +120,7 @@ function getPageTitle(pathname: string): string {
   if (pathname === '/collections') return 'Collections'
   if (pathname === '/categories') return 'Categories'
   if (pathname === '/coupons') return 'Coupons'
+  if (pathname === '/chatbot') return 'Chatbot'
   return 'Admin'
 }
 

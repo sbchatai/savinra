@@ -154,9 +154,6 @@ export default function SavinraHeader() {
                 )}
               </Link>
 
-              {/* Account */}
-              <UserMenu />
-
               {/* Cart */}
               <Link to="/cart" className="relative p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-ivory" aria-label="Cart">
                 <ShoppingBag size={20} />
@@ -171,6 +168,9 @@ export default function SavinraHeader() {
                   </motion.span>
                 )}
               </Link>
+
+              {/* Account */}
+              <UserMenu />
 
               {/* Mobile hamburger */}
               <button

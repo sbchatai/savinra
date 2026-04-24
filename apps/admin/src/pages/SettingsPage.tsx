@@ -7,13 +7,15 @@ import type { Database } from '@savinra/shared'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TabId = 'store' | 'shipping' | 'announcements' | 'faqs' | 'notifications'
+type TabId = 'store' | 'shipping' | 'announcements' | 'faqs' | 'homepage' | 'pages' | 'notifications'
 
 const TABS: { id: TabId; label: string }[] = [
   { id: 'store', label: 'Store Info' },
   { id: 'shipping', label: 'Shipping & Payments' },
   { id: 'announcements', label: 'Announcements' },
   { id: 'faqs', label: 'FAQs' },
+  { id: 'homepage', label: 'Homepage' },
+  { id: 'pages', label: 'Pages' },
   { id: 'notifications', label: 'Notifications' },
 ]
 
@@ -32,6 +34,13 @@ interface StoreSettings {
   cod_enabled: boolean | null
   cod_max_order_value: number | null
   gst_rate_percent: number | null
+  hero_image: string | null
+  hero_heading: string | null
+  hero_subheading: string | null
+  hero_cta_primary_text: string | null
+  hero_cta_primary_url: string | null
+  hero_cta_secondary_text: string | null
+  hero_cta_secondary_url: string | null
 }
 
 interface Announcement {
@@ -63,6 +72,17 @@ interface WhatsappLog {
   phone: string
   status: string
   created_at: string
+}
+
+interface Page {
+  id: string
+  slug: string
+  title: string
+  content: string
+  meta_title: string | null
+  meta_desc: string | null
+  is_active: boolean
+  updated_at: string
 }
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -761,6 +781,14 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabId>('store')
   const [settings, setSettings] = useState<StoreSettings | null>(null)
   const [isLoadingSettings, setIsLoadingSettings] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  // Pages state
+  const [pages, setPages] = useState<Page[]>([])
+  const [editingPage, setEditingPage] = useState<Page | null>(null)
+  const [pageSaving, setPageSaving] = useState(false)
+  const [pageSaved, setPageSaved] = useState(false)
 
   async function loadSettings() {
     const { data } = await supabase
@@ -772,7 +800,33 @@ export default function SettingsPage() {
     setIsLoadingSettings(false)
   }
 
-  useEffect(() => { loadSettings() }, [])
+  async function loadPages() {
+    if (!supabase) return
+    // 'pages' table is not yet in the generated Database types — cast through any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase as any).from('pages').select('*').order('slug')
+    if (data) setPages(data as Page[])
+  }
+
+  useEffect(() => {
+    loadSettings()
+    loadPages()
+  }, [])
+
+  // Hero settings — derived from settings, kept in sync via local state keys on settings
+  const heroSettings = {
+    hero_image: settings?.hero_image ?? '',
+    hero_heading: settings?.hero_heading ?? '',
+    hero_subheading: settings?.hero_subheading ?? '',
+    hero_cta_primary_text: settings?.hero_cta_primary_text ?? '',
+    hero_cta_primary_url: settings?.hero_cta_primary_url ?? '',
+    hero_cta_secondary_text: settings?.hero_cta_secondary_text ?? '',
+    hero_cta_secondary_url: settings?.hero_cta_secondary_url ?? '',
+  }
+
+  function setHeroField(field: keyof typeof heroSettings, value: string) {
+    setSettings(s => s ? { ...s, [field]: value } : s)
+  }
 
   return (
     <section aria-labelledby="settings-heading" className="max-w-3xl">
@@ -828,6 +882,194 @@ export default function SettingsPage() {
               {tab.id === 'announcements' && <AnnouncementsTab />}
               {tab.id === 'faqs' && <FaqsTab />}
               {tab.id === 'notifications' && <NotificationsTab />}
+
+              {tab.id === 'homepage' && (
+                <div className="space-y-8 max-w-2xl">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-cocoa mb-1">Hero Section</h2>
+                    <p className="text-sm text-cocoa/50 font-body mb-6">Controls the full-screen banner on the homepage.</p>
+                    <div className="space-y-4">
+                      <Field
+                        id="hero_image"
+                        label="Hero Background Image URL"
+                        value={heroSettings.hero_image}
+                        onChange={v => setHeroField('hero_image', v)}
+                        placeholder="https://..."
+                        hint="Paste a direct image URL. Recommended: 1600×900px, high quality."
+                      />
+                      <Field
+                        id="hero_heading"
+                        label="Heading Text"
+                        value={heroSettings.hero_heading}
+                        onChange={v => setHeroField('hero_heading', v)}
+                        placeholder="House of Refined Living"
+                      />
+                      <Field
+                        id="hero_subheading"
+                        label="Subheading / Season Label"
+                        value={heroSettings.hero_subheading}
+                        onChange={v => setHeroField('hero_subheading', v)}
+                        placeholder="Spring · Summer 2026"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-body text-sm font-semibold text-cocoa/70 uppercase tracking-wider mb-4">Primary CTA Button</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        id="hero_cta_primary_text"
+                        label="Button Label"
+                        value={heroSettings.hero_cta_primary_text}
+                        onChange={v => setHeroField('hero_cta_primary_text', v)}
+                        placeholder="Shop Now"
+                      />
+                      <Field
+                        id="hero_cta_primary_url"
+                        label="Button URL"
+                        value={heroSettings.hero_cta_primary_url}
+                        onChange={v => setHeroField('hero_cta_primary_url', v)}
+                        placeholder="/shop"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-body text-sm font-semibold text-cocoa/70 uppercase tracking-wider mb-4">Secondary CTA Button</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field
+                        id="hero_cta_secondary_text"
+                        label="Button Label"
+                        value={heroSettings.hero_cta_secondary_text}
+                        onChange={v => setHeroField('hero_cta_secondary_text', v)}
+                        placeholder="Our Story"
+                      />
+                      <Field
+                        id="hero_cta_secondary_url"
+                        label="Button URL"
+                        value={heroSettings.hero_cta_secondary_url}
+                        onChange={v => setHeroField('hero_cta_secondary_url', v)}
+                        placeholder="/about"
+                      />
+                    </div>
+                  </div>
+
+                  <SaveButton
+                    onClick={async () => {
+                      if (!supabase) return
+                      setSaving(true)
+                      // hero_* fields not yet in generated types — cast through any
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      await (supabase as any).from('store_settings').update({
+                        hero_image: settings?.hero_image || null,
+                        hero_heading: settings?.hero_heading || null,
+                        hero_subheading: settings?.hero_subheading || null,
+                        hero_cta_primary_text: settings?.hero_cta_primary_text || null,
+                        hero_cta_primary_url: settings?.hero_cta_primary_url || null,
+                        hero_cta_secondary_text: settings?.hero_cta_secondary_text || null,
+                        hero_cta_secondary_url: settings?.hero_cta_secondary_url || null,
+                      }).eq('id', 1)
+                      setSaving(false)
+                      setSaved(true)
+                      setTimeout(() => setSaved(false), 2500)
+                    }}
+                    saving={saving}
+                    saved={saved}
+                  />
+                </div>
+              )}
+
+              {tab.id === 'pages' && (
+                <div className="space-y-6 max-w-3xl">
+                  <div>
+                    <h2 className="font-heading text-lg font-semibold text-cocoa mb-1">Static Pages</h2>
+                    <p className="text-sm text-cocoa/50 font-body mb-6">Manage content for About, Privacy, and Terms pages.</p>
+                  </div>
+
+                  {/* Page list */}
+                  {!editingPage && (
+                    <div className="space-y-3">
+                      {pages.map(page => (
+                        <div key={page.id} className="flex items-center justify-between p-4 bg-white border border-admin-border rounded-card">
+                          <div>
+                            <p className="font-body font-medium text-cocoa text-sm capitalize">{page.title}</p>
+                            <p className="font-body text-xs text-cocoa/40">/{page.slug}</p>
+                          </div>
+                          <button
+                            onClick={() => setEditingPage({ ...page })}
+                            className="px-3 py-1.5 text-xs font-body font-medium text-gold-accessible border border-gold-accessible rounded hover:bg-gold-accessible hover:text-white transition-colors"
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      ))}
+                      {pages.length === 0 && (
+                        <p className="text-sm text-cocoa/40 font-body py-8 text-center">No pages found. Run migration 013 to seed the About page.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Page editor */}
+                  {editingPage && (
+                    <div className="space-y-4">
+                      <button onClick={() => setEditingPage(null)} className="text-sm text-gold-accessible font-body hover:underline flex items-center gap-1">
+                        ← Back to pages
+                      </button>
+                      <Field
+                        id="page_title"
+                        label="Page Title"
+                        value={editingPage.title}
+                        onChange={v => setEditingPage(p => p ? { ...p, title: v } : p)}
+                      />
+                      <Field
+                        id="page_content"
+                        label="Content"
+                        value={editingPage.content}
+                        onChange={v => setEditingPage(p => p ? { ...p, content: v } : p)}
+                        rows={16}
+                        hint="Supports plain text. Use double line breaks for paragraphs."
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <Field
+                          id="page_meta_title"
+                          label="SEO Title"
+                          value={editingPage.meta_title ?? ''}
+                          onChange={v => setEditingPage(p => p ? { ...p, meta_title: v } : p)}
+                        />
+                        <Field
+                          id="page_meta_desc"
+                          label="SEO Description"
+                          value={editingPage.meta_desc ?? ''}
+                          onChange={v => setEditingPage(p => p ? { ...p, meta_desc: v } : p)}
+                        />
+                      </div>
+                      <div className="flex items-center gap-3 pt-2">
+                        <SaveButton
+                          onClick={async () => {
+                            if (!supabase || !editingPage) return
+                            setPageSaving(true)
+                            // 'pages' table not yet in generated types — cast through any
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            await (supabase as any).from('pages').update({
+                              title: editingPage.title,
+                              content: editingPage.content,
+                              meta_title: editingPage.meta_title || null,
+                              meta_desc: editingPage.meta_desc || null,
+                              updated_at: new Date().toISOString(),
+                            }).eq('id', editingPage.id)
+                            setPageSaving(false)
+                            setPageSaved(true)
+                            setPages(prev => prev.map(p => p.id === editingPage.id ? { ...editingPage } : p))
+                            setTimeout(() => setPageSaved(false), 2500)
+                          }}
+                          saving={pageSaving}
+                          saved={pageSaved}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
