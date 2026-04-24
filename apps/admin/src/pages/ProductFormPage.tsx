@@ -22,6 +22,8 @@ interface ProductFormData {
   in_stock: boolean
   customizable: boolean
   collection_ids: string[]
+  category_id: string | null
+  subcategory_id: string | null
 }
 
 interface ImageEntry {
@@ -50,6 +52,17 @@ interface Collection {
   slug: string
 }
 
+interface CustomizationOptionEntry {
+  id?: string
+  label: string
+  type: 'text' | 'select' | 'color'
+  choices: string        // comma-separated string in the UI
+  max_length: string     // string for controlled input, parsed on save
+  is_required: boolean
+  price_delta: string    // rupees as string in the UI, saved as paise
+  sort_order: number
+}
+
 // ─── Constants ─────────────────────────────────────────────────────────────────
 
 const EMPTY_FORM: ProductFormData = {
@@ -67,6 +80,8 @@ const EMPTY_FORM: ProductFormData = {
   in_stock: true,
   customizable: false,
   collection_ids: [],
+  category_id: null,
+  subcategory_id: null,
 }
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size']
@@ -479,6 +494,289 @@ function CollectionSelector({
   )
 }
 
+// ─── Category selector ────────────────────────────────────────────────────────
+
+interface CategoryOption {
+  id: string
+  name: string
+  subcategories: { id: string; name: string }[]
+}
+
+function CategorySelector({
+  categoryId,
+  subcategoryId,
+  onCategoryChange,
+  onSubcategoryChange,
+}: {
+  categoryId: string | null
+  subcategoryId: string | null
+  onCategoryChange: (id: string | null) => void
+  onSubcategoryChange: (id: string | null) => void
+}) {
+  const [categories, setCategories] = useState<CategoryOption[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('categories')
+      .select('id, name, subcategories(id, name, sort_order)')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => {
+        const mapped = (data ?? []).map((c) => ({
+          id: c.id,
+          name: c.name,
+          subcategories: ((c.subcategories ?? []) as { id: string; name: string; sort_order: number }[])
+            .sort((a, b) => a.sort_order - b.sort_order),
+        }))
+        setCategories(mapped)
+        setIsLoading(false)
+      })
+  }, [])
+
+  const activeSubcategories =
+    categoryId ? (categories.find((c) => c.id === categoryId)?.subcategories ?? []) : []
+
+  if (isLoading) return <p className="text-xs text-cocoa/40 font-body">Loading categories…</p>
+
+  if (categories.length === 0) {
+    return <p className="text-xs text-cocoa/40 font-body italic">No categories yet. Create one in the Categories page.</p>
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* Category */}
+      <div>
+        <label htmlFor="product-category" className="block text-sm font-medium text-cocoa/70 font-body mb-1.5">
+          Category
+        </label>
+        <select
+          id="product-category"
+          value={categoryId ?? ''}
+          onChange={(e) => {
+            const val = e.target.value || null
+            onCategoryChange(val)
+            onSubcategoryChange(null) // reset subcategory when category changes
+          }}
+          className="w-full px-3 py-2.5 text-sm border border-admin-border rounded text-cocoa bg-white focus:outline-none focus:ring-2 focus:ring-gold/40 font-body"
+        >
+          <option value="">— No category —</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Subcategory — only shown when a category with subcategories is selected */}
+      {categoryId && activeSubcategories.length > 0 && (
+        <div>
+          <label htmlFor="product-subcategory" className="block text-sm font-medium text-cocoa/70 font-body mb-1.5">
+            Subcategory
+          </label>
+          <select
+            id="product-subcategory"
+            value={subcategoryId ?? ''}
+            onChange={(e) => onSubcategoryChange(e.target.value || null)}
+            className="w-full px-3 py-2.5 text-sm border border-admin-border rounded text-cocoa bg-white focus:outline-none focus:ring-2 focus:ring-gold/40 font-body"
+          >
+            <option value="">— No subcategory —</option>
+            {activeSubcategories.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Customization options editor ─────────────────────────────────────────────
+
+const EMPTY_CUSTOMIZATION_OPTION: CustomizationOptionEntry = {
+  label: '',
+  type: 'text',
+  choices: '',
+  max_length: '',
+  is_required: false,
+  price_delta: '0',
+  sort_order: 0,
+}
+
+function CustomizationOptionsEditor({
+  options,
+  onChange,
+}: {
+  options: CustomizationOptionEntry[]
+  onChange: (opts: CustomizationOptionEntry[]) => void
+}) {
+  function update(idx: number, field: keyof CustomizationOptionEntry, value: string | boolean) {
+    onChange(options.map((o, i) => (i === idx ? { ...o, [field]: value } : o)))
+  }
+
+  function addOption() {
+    onChange([
+      ...options,
+      { ...EMPTY_CUSTOMIZATION_OPTION, sort_order: options.length },
+    ])
+  }
+
+  function removeOption(idx: number) {
+    onChange(options.filter((_, i) => i !== idx))
+  }
+
+  const selectClass =
+    'w-full px-2 py-1.5 text-xs border border-admin-border rounded text-cocoa bg-parchment focus:outline-none focus:ring-1 focus:ring-gold/40 font-body'
+  const inputXs =
+    'w-full px-2 py-1.5 text-xs border border-admin-border rounded text-cocoa bg-parchment placeholder-cocoa/30 focus:outline-none focus:ring-1 focus:ring-gold/40 font-body'
+
+  return (
+    <div className="space-y-3">
+      {options.length === 0 && (
+        <p className="text-sm text-cocoa/40 font-body italic py-2">
+          No customization options yet. Add options that buyers can personalise.
+        </p>
+      )}
+
+      {options.map((opt, idx) => (
+        <div
+          key={idx}
+          className="p-4 border border-admin-border rounded-card bg-white space-y-3"
+        >
+          {/* Row 1: label + type + required + remove */}
+          <div className="grid grid-cols-12 gap-2 items-start">
+            <div className="col-span-5">
+              <label className="text-[11px] text-cocoa/50 font-body mb-1 block">
+                Option label <span className="text-error">*</span>
+              </label>
+              <input
+                type="text"
+                value={opt.label}
+                onChange={(e) => update(idx, 'label', e.target.value)}
+                placeholder="e.g. Add Monogram"
+                className={inputXs}
+              />
+            </div>
+
+            <div className="col-span-3">
+              <label className="text-[11px] text-cocoa/50 font-body mb-1 block">Type</label>
+              <select
+                value={opt.type}
+                onChange={(e) =>
+                  update(idx, 'type', e.target.value as 'text' | 'select' | 'color')
+                }
+                className={selectClass}
+              >
+                <option value="text">Text input</option>
+                <option value="select">Dropdown / Pills</option>
+                <option value="color">Color swatches</option>
+              </select>
+            </div>
+
+            <div className="col-span-2 flex flex-col items-center justify-end pb-0.5 gap-1">
+              <label className="text-[11px] text-cocoa/50 font-body">Required</label>
+              <input
+                type="checkbox"
+                checked={opt.is_required}
+                onChange={(e) => update(idx, 'is_required', e.target.checked)}
+                className="w-4 h-4 rounded border-admin-border text-gold focus:ring-gold/40"
+              />
+            </div>
+
+            <div className="col-span-2 flex items-end pb-1 justify-end">
+              <button
+                type="button"
+                onClick={() => removeOption(idx)}
+                className="text-error/60 hover:text-error transition-colors text-xs font-body"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2: type-specific fields + price */}
+          <div className="grid grid-cols-12 gap-2 items-start">
+            {/* Choices — shown for select & color */}
+            {(opt.type === 'select' || opt.type === 'color') && (
+              <div className="col-span-8">
+                <label className="text-[11px] text-cocoa/50 font-body mb-1 block">
+                  Choices <span className="text-cocoa/30">(comma-separated)</span>
+                </label>
+                <input
+                  type="text"
+                  value={opt.choices}
+                  onChange={(e) => update(idx, 'choices', e.target.value)}
+                  placeholder="e.g. Red, Blue, Green"
+                  className={inputXs}
+                />
+              </div>
+            )}
+
+            {/* Max length — shown for text */}
+            {opt.type === 'text' && (
+              <div className="col-span-4">
+                <label className="text-[11px] text-cocoa/50 font-body mb-1 block">
+                  Max characters
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="200"
+                  value={opt.max_length}
+                  onChange={(e) => update(idx, 'max_length', e.target.value)}
+                  placeholder="e.g. 20"
+                  className={inputXs}
+                />
+              </div>
+            )}
+
+            {/* Price delta */}
+            <div className={opt.type === 'text' ? 'col-span-4' : 'col-span-4'}>
+              <label className="text-[11px] text-cocoa/50 font-body mb-1 block">
+                Extra charge (₹)
+              </label>
+              <div className="relative">
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-cocoa/40 font-body">
+                  ₹
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={opt.price_delta}
+                  onChange={(e) => update(idx, 'price_delta', e.target.value)}
+                  placeholder="0"
+                  className={`${inputXs} pl-5`}
+                />
+              </div>
+              <p className="text-[10px] text-cocoa/30 font-body mt-0.5">0 = included free</p>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      <button
+        type="button"
+        onClick={addOption}
+        className="inline-flex items-center gap-2 px-3 py-1.5 border border-dashed border-admin-border rounded text-xs text-cocoa/50 hover:text-gold hover:border-gold transition-colors font-body"
+      >
+        <svg
+          width="12"
+          height="12"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add customization option
+      </button>
+    </div>
+  )
+}
+
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 export default function ProductFormPage() {
@@ -489,6 +787,7 @@ export default function ProductFormPage() {
   const [form, setForm] = useState<ProductFormData>(EMPTY_FORM)
   const [images, setImages] = useState<ImageEntry[]>([])
   const [variants, setVariants] = useState<VariantEntry[]>([])
+  const [customizationOptions, setCustomizationOptions] = useState<CustomizationOptionEntry[]>([])
   const [isLoading, setIsLoading] = useState(isEditing)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -532,6 +831,13 @@ export default function ProductFormPage() {
       .select('collection_id')
       .eq('product_id', productId)
 
+    // Load customization options
+    const { data: custOpts } = await supabase
+      .from('product_customization_options')
+      .select('*')
+      .eq('product_id', productId)
+      .order('sort_order', { ascending: true })
+
     setForm({
       name: data.name,
       slug: data.slug,
@@ -547,7 +853,22 @@ export default function ProductFormPage() {
       in_stock: data.in_stock,
       customizable: data.customizable,
       collection_ids: colls?.map((c) => c.collection_id) ?? [],
+      category_id: data.category_id ?? null,
+      subcategory_id: data.subcategory_id ?? null,
     })
+
+    setCustomizationOptions(
+      (custOpts ?? []).map((o) => ({
+        id: o.id,
+        label: o.label,
+        type: o.type as 'text' | 'select' | 'color',
+        choices: (o.choices ?? []).join(', '),
+        max_length: o.max_length != null ? String(o.max_length) : '',
+        is_required: o.is_required,
+        price_delta: String((o.price_delta ?? 0) / 100),
+        sort_order: o.sort_order,
+      }))
+    )
 
     setImages(
       (imgs ?? []).map((img) => ({
@@ -627,6 +948,8 @@ export default function ProductFormPage() {
       is_bestseller: form.is_bestseller,
       in_stock: form.in_stock,
       customizable: form.customizable,
+      category_id: form.category_id || null,
+      subcategory_id: form.subcategory_id || null,
     }
 
     try {
@@ -720,6 +1043,41 @@ export default function ProductFormPage() {
       await supabase!.from('collection_products').delete().eq('product_id', productId)
       for (const collId of form.collection_ids) {
         await supabase!.from('collection_products').insert({ collection_id: collId, product_id: productId })
+      }
+
+      // Save customization options — delete removed, upsert rest
+      const { data: currentOpts } = await supabase
+        .from('product_customization_options')
+        .select('id')
+        .eq('product_id', productId)
+      const storedOptIds = new Set(customizationOptions.filter((o) => o.id).map((o) => o.id!))
+      for (const curr of currentOpts ?? []) {
+        if (!storedOptIds.has(curr.id)) {
+          await supabase!.from('product_customization_options').delete().eq('id', curr.id)
+        }
+      }
+      for (const opt of customizationOptions) {
+        const optPayload = {
+          product_id: productId,
+          label: opt.label.trim(),
+          type: opt.type,
+          choices:
+            opt.type !== 'text' && opt.choices.trim()
+              ? opt.choices.split(',').map((s) => s.trim()).filter(Boolean)
+              : null,
+          max_length:
+            opt.type === 'text' && opt.max_length
+              ? parseInt(opt.max_length) || null
+              : null,
+          is_required: opt.is_required,
+          price_delta: Math.round(parseFloat(opt.price_delta || '0') * 100),
+          sort_order: opt.sort_order,
+        }
+        if (opt.id) {
+          await supabase!.from('product_customization_options').update(optPayload).eq('id', opt.id)
+        } else {
+          await supabase!.from('product_customization_options').insert(optPayload)
+        }
       }
 
       navigate('/products')
@@ -925,6 +1283,34 @@ export default function ProductFormPage() {
             <VariantsEditor variants={variants} onChange={setVariants} />
           </div>
 
+          {/* Customization options — visible when customizable is toggled on */}
+          <div className="bg-parchment rounded-card shadow-card border border-admin-border p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-heading text-base font-medium text-cocoa">Customization</h3>
+                <p className="text-xs text-cocoa/40 font-body mt-0.5">
+                  Allow buyers to personalise this piece — monograms, embroidery, colour choices, etc.
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={form.customizable}
+                  onChange={handleCheckbox('customizable')}
+                  className="w-4 h-4 rounded border-admin-border text-gold focus:ring-gold/40"
+                />
+                <span className="text-sm text-cocoa font-body font-medium">Enable</span>
+              </label>
+            </div>
+
+            {form.customizable && (
+              <CustomizationOptionsEditor
+                options={customizationOptions}
+                onChange={setCustomizationOptions}
+              />
+            )}
+          </div>
+
         </div>
 
         {/* Right column — metadata */}
@@ -938,7 +1324,6 @@ export default function ProductFormPage() {
               { field: 'in_stock' as const, label: 'In stock' },
               { field: 'is_new' as const, label: 'Mark as New arrival' },
               { field: 'is_bestseller' as const, label: 'Mark as Bestseller' },
-              { field: 'customizable' as const, label: 'Allow customization' },
             ].map(({ field, label }) => (
               <label key={field} className="flex items-center gap-3 cursor-pointer">
                 <input
@@ -950,6 +1335,22 @@ export default function ProductFormPage() {
                 <span className="text-sm text-cocoa font-body">{label}</span>
               </label>
             ))}
+          </div>
+
+          {/* Category */}
+          <div className="bg-parchment rounded-card shadow-card border border-admin-border p-6 space-y-3">
+            <h3 className="font-heading text-base font-medium text-cocoa">Category</h3>
+            <p className="text-xs text-cocoa/40 font-body">Assign to a category so it appears in the shop navigation.</p>
+            <CategorySelector
+              categoryId={form.category_id}
+              subcategoryId={form.subcategory_id}
+              onCategoryChange={(id) =>
+                setForm((prev) => ({ ...prev, category_id: id, subcategory_id: null }))
+              }
+              onSubcategoryChange={(id) =>
+                setForm((prev) => ({ ...prev, subcategory_id: id }))
+              }
+            />
           </div>
 
           {/* Collections */}

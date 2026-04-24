@@ -334,8 +334,13 @@ export default function ProductDetailPage() {
               <div className="flex flex-col gap-4">
                 {product.customization_options.map(opt => (
                   <div key={opt.id}>
-                    <label className="font-body text-xs font-medium text-cocoa/70 uppercase tracking-wide mb-1.5 block">
-                      {opt.label}{opt.is_required && <span className="text-error ml-0.5">*</span>}
+                    <label className="font-body text-xs font-medium text-cocoa/70 uppercase tracking-wide mb-1.5 flex items-center gap-2">
+                      <span>{opt.label}{opt.is_required && <span className="text-error ml-0.5">*</span>}</span>
+                      {opt.price_delta > 0 && (
+                        <span className="text-gold-accessible font-semibold normal-case tracking-normal">
+                          +{formatPrice(opt.price_delta / 100)}
+                        </span>
+                      )}
                     </label>
                     {opt.type === 'text' && (
                       <input

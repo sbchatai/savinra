@@ -1196,6 +1196,7 @@ export type Database = {
           is_required: boolean
           label: string
           max_length: number | null
+          price_delta: number
           product_id: string
           sort_order: number
           type: string
@@ -1207,6 +1208,7 @@ export type Database = {
           is_required?: boolean
           label: string
           max_length?: number | null
+          price_delta?: number
           product_id: string
           sort_order?: number
           type: string
@@ -1218,6 +1220,7 @@ export type Database = {
           is_required?: boolean
           label?: string
           max_length?: number | null
+          price_delta?: number
           product_id?: string
           sort_order?: number
           type?: string

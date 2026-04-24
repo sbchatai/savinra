@@ -20,7 +20,7 @@ export interface ProductDetail {
   tags: string[]
   images: { id: string; url: string; alt_text: string | null; sort_order: number; is_primary: boolean }[]
   variants: { id: string; size: string; color: string | null; stock_count: number; price_delta: number; is_active: boolean }[]
-  customization_options: { id: string; label: string; type: string; choices: string[] | null; max_length: number | null; is_required: boolean; sort_order: number }[]
+  customization_options: { id: string; label: string; type: string; choices: string[] | null; max_length: number | null; is_required: boolean; price_delta: number; sort_order: number }[]
   reviews: { id: string; reviewer_name: string; reviewer_location: string | null; rating: number; body: string; is_verified: boolean; created_at: string }[]
 }
 
@@ -43,7 +43,7 @@ export function useProduct(slug: string) {
           customizable, occasions, tags,
           product_images(id, url, alt_text, sort_order, is_primary),
           product_variants(id, size, color, stock_count, price_delta, is_active),
-          product_customization_options(id, label, type, choices, max_length, is_required, sort_order),
+          product_customization_options(id, label, type, choices, max_length, is_required, price_delta, sort_order),
           product_reviews(id, reviewer_name, reviewer_location, rating, body, is_verified, created_at)
         `)
         .eq('slug', slug)
