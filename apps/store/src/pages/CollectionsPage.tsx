@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { useCollections } from '@/hooks/useCollections'
+import SEOHead from '@/components/layout/SEOHead'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&h=800&auto=format&fit=crop&q=80'
 
@@ -10,6 +11,11 @@ export default function CollectionsPage() {
 
   return (
     <div>
+      <SEOHead
+        title="Collections"
+        description="Explore Savinra's curated collections — festive, wedding, casual and more. Each collection tells a story of Indian craft."
+        canonical="/collections"
+      />
       {/* Hero */}
       <section className="bg-ivory border-b border-gold/20 py-20 px-4 text-center">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

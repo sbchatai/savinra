@@ -74,6 +74,20 @@ const NAV_ITEMS: NavItem[] = [
     ),
   },
   {
+    label: 'Categories',
+    path: '/categories',
+    icon: (
+      <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24" aria-hidden="true">
+        <line x1="8" y1="6" x2="21" y2="6" />
+        <line x1="8" y1="12" x2="21" y2="12" />
+        <line x1="8" y1="18" x2="21" y2="18" />
+        <line x1="3" y1="6" x2="3.01" y2="6" />
+        <line x1="3" y1="12" x2="3.01" y2="12" />
+        <line x1="3" y1="18" x2="3.01" y2="18" />
+      </svg>
+    ),
+  },
+  {
     label: 'Coupons',
     path: '/coupons',
     icon: (
@@ -95,6 +109,7 @@ function getPageTitle(pathname: string): string {
   if (pathname === '/customers') return 'Customers'
   if (pathname === '/settings') return 'Settings'
   if (pathname === '/collections') return 'Collections'
+  if (pathname === '/categories') return 'Categories'
   if (pathname === '/coupons') return 'Coupons'
   return 'Admin'
 }

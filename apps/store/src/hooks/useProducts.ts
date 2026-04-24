@@ -20,6 +20,8 @@ interface UseProductsFilters {
   is_new?: boolean
   occasion?: string
   collection_slug?: string
+  category_id?: string
+  subcategory_id?: string
   limit?: number
 }
 
@@ -77,6 +79,8 @@ export function useProducts(filters?: UseProductsFilters) {
           if (filters?.is_bestseller) q = q.eq('is_bestseller', true)
           if (filters?.is_new) q = q.eq('is_new', true)
           if (filters?.occasion) q = q.contains('occasions', [filters.occasion])
+          if (filters?.category_id) q = q.eq('category_id', filters.category_id)
+          if (filters?.subcategory_id) q = q.eq('subcategory_id', filters.subcategory_id)
           if (filters?.limit) q = q.limit(filters.limit)
 
           const { data, error: err } = await q
@@ -93,7 +97,7 @@ export function useProducts(filters?: UseProductsFilters) {
 
     load()
     return () => { cancelled = true }
-  }, [filters?.is_bestseller, filters?.is_new, filters?.occasion, filters?.collection_slug, filters?.limit])
+  }, [filters?.is_bestseller, filters?.is_new, filters?.occasion, filters?.collection_slug, filters?.category_id, filters?.subcategory_id, filters?.limit])
 
   return { products, isLoading, error }
 }

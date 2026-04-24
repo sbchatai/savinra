@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext'
 import LiveProductCard from '@/components/product/LiveProductCard'
 import { useProducts } from '@/hooks/useProducts'
 import { formatPrice, cn } from '@/lib/utils'
+import SEOHead from '@/components/layout/SEOHead'
 
 export default function CartPage() {
   const { items, removeItem, updateQty, total, itemCount } = useCart()
@@ -30,6 +31,7 @@ export default function CartPage() {
         animate={{ opacity: 1, y: 0 }}
         className="max-w-xl mx-auto px-4 py-24 text-center"
       >
+        <SEOHead title="Shopping Cart" noIndex />
         <motion.div
           initial={{ scale: 0.5 }}
           animate={{ scale: 1 }}
@@ -49,6 +51,7 @@ export default function CartPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
+      <SEOHead title="Shopping Cart" noIndex />
       <motion.h1
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

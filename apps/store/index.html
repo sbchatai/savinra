@@ -10,6 +10,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Lato:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Open Graph (defaults — individual pages override via Helmet) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Savinra" />
+    <meta property="og:image" content="/og-default.jpg" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:site" content="@savinra" />
+    <!-- Structured data: Organization -->
+    <script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Organization","name":"Savinra","url":"https://savinra.in","logo":"https://savinra.in/savinra-logo.svg","sameAs":["https://www.instagram.com/savinra"],"contactPoint":{"@type":"ContactPoint","contactType":"customer service","availableLanguage":"English"}}
+    </script>
   </head>
   <body>
     <div id="root"></div>

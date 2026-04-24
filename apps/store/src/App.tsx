@@ -20,6 +20,7 @@ import ReturnsPage from '@/pages/ReturnsPage'
 import WishlistPage from '@/pages/WishlistPage'
 import AccountPage from '@/pages/AccountPage'
 import HelpPage from '@/pages/HelpPage'
+import ShopCategoryPage from '@/pages/ShopCategoryPage'
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -46,6 +47,8 @@ export default function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
             <Route path="/shop" element={<Layout><ShopPage /></Layout>} />
+            <Route path="/shop/:categorySlug" element={<Layout><ShopCategoryPage /></Layout>} />
+            <Route path="/shop/:categorySlug/:subcategorySlug" element={<Layout><ShopCategoryPage /></Layout>} />
             <Route path="/collections" element={<Layout><CollectionsPage /></Layout>} />
             <Route path="/collections/:slug" element={<Layout><CollectionDetailPage /></Layout>} />
             <Route path="/orders" element={<Layout><OrdersPage /></Layout>} />

@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext'
 import { formatPrice } from '@/lib/utils'
 import AccountSidebar from '@/components/account/AccountSidebar'
 import { Package, ChevronRight } from 'lucide-react'
+import SEOHead from '@/components/layout/SEOHead'
 
 const STATUS_STYLES: Record<string, string> = {
   pending: 'bg-gold/20 text-gold-accessible',
@@ -72,7 +73,8 @@ export default function OrdersPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex gap-12">
+      <SEOHead title="My Orders" noIndex />
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
         <AccountSidebar />
         <div className="flex-1">
           <h1 className="font-heading text-3xl font-semibold text-cocoa mb-8">My Orders</h1>

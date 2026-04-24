@@ -3,3 +3,4 @@ Allow: /
 Disallow: /checkout/
 Disallow: /account/
 Disallow: /orders/
+Sitemap: https://savinra.in/sitemap.xml

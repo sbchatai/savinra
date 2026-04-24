@@ -1,0 +1,12 @@
+{
+  "name": "Savinra",
+  "short_name": "Savinra",
+  "description": "Handcrafted Indo-Western Fashion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F0E8",
+  "theme_color": "#B8860B",
+  "icons": [
+    { "src": "/savinra-logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

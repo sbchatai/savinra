@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import AccountSidebar from '@/components/account/AccountSidebar'
+import SEOHead from '@/components/layout/SEOHead'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -280,7 +281,8 @@ export default function AccountPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex gap-12">
+      <SEOHead title="My Profile" noIndex />
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
         <AccountSidebar />
         <div className="flex-1 max-w-2xl">
           <h1 className="font-heading text-3xl font-semibold text-cocoa mb-8">My Profile</h1>

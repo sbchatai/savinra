@@ -11,6 +11,7 @@ import ProductFormPage from '@/pages/ProductFormPage'
 import CustomersPage from '@/pages/CustomersPage'
 import SettingsPage from '@/pages/SettingsPage'
 import CollectionsPage from '@/pages/CollectionsPage'
+import CategoriesPage from '@/pages/CategoriesPage'
 import CouponsPage from '@/pages/CouponsPage'
 
 export default function App() {
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
+              <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/coupons" element={<CouponsPage />} />
             </Route>
           </Route>

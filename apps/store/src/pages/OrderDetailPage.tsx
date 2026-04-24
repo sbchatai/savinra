@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext'
 import { formatPrice } from '@/lib/utils'
 import AccountSidebar from '@/components/account/AccountSidebar'
 import { CheckCircle, Circle, Truck, Package, MapPin } from 'lucide-react'
+import SEOHead from '@/components/layout/SEOHead'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -202,7 +203,8 @@ export default function OrderDetailPage() {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex gap-12">
+        <SEOHead title="Order Details" noIndex />
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-12">
           <AccountSidebar />
           <LoadingSkeleton />
         </div>
@@ -217,6 +219,7 @@ export default function OrderDetailPage() {
   if (fetchError || !order) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <SEOHead title="Order Details" noIndex />
         <h1 className="font-heading text-3xl text-cocoa mb-4">
           {fetchError ?? 'Order not found'}
         </h1>
@@ -246,6 +249,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <SEOHead title="Order Details" noIndex />
       <div className="flex gap-12">
         <AccountSidebar />
         <div className="flex-1">

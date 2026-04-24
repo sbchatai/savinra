@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FAQS } from '@/data/placeholder'
 import { Search, ChevronDown, ChevronUp, MessageCircle, Mail, X } from 'lucide-react'
+import SEOHead from '@/components/layout/SEOHead'
 
 export default function HelpPage() {
   const categories = useMemo(() => [...new Set(FAQS.map(f => f.category))], [])
@@ -23,6 +24,11 @@ export default function HelpPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
+      <SEOHead
+        title="Help & FAQs"
+        description="Get answers to common questions about orders, shipping, returns and sizing at Savinra."
+        canonical="/help"
+      />
       <div className="text-center mb-12">
         <h1 className="font-heading text-5xl font-semibold text-cocoa mb-4">How can we help?</h1>
         <p className="font-body text-cocoa/60 mb-8">Search for answers or browse categories below</p>

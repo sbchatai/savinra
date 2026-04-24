@@ -5,6 +5,7 @@ import { useProducts } from '@/hooks/useProducts'
 import { useCollections } from '@/hooks/useCollections'
 import LiveProductCard from '@/components/product/LiveProductCard'
 import { cn } from '@/lib/utils'
+import SEOHead from '@/components/layout/SEOHead'
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc'
 
@@ -130,6 +131,11 @@ export default function ShopPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <SEOHead
+        title="Shop Indo-Western Clothing"
+        description="Browse all handcrafted Indo-Western pieces — kurtas, suits, festive & casual wear. Filter by collection, size, and occasion."
+        canonical="/shop"
+      />
       <div className="mb-8">
         <h1 className="font-heading text-4xl font-semibold text-cocoa mb-2">The Collection</h1>
         <p className="font-body text-sm text-cocoa/60">

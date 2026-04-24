@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext'
 import { useAuth } from '@/context/AuthContext'
 import { formatPrice, cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import SEOHead from '@/components/layout/SEOHead'
 
 type Step = 'delivery' | 'payment'
 
@@ -154,6 +155,7 @@ export default function CheckoutPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-parchment flex items-center justify-center px-4">
+        <SEOHead title="Checkout" noIndex />
         <div className="text-center">
           <h2 className="font-heading text-2xl text-cocoa mb-3">Sign in to continue checkout</h2>
           <p className="font-body text-sm text-cocoa/60 mb-6">
@@ -175,6 +177,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-parchment">
+      <SEOHead title="Checkout" noIndex />
       {/* Simplified header */}
       <header className="border-b border-gold/20 bg-parchment/90 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">

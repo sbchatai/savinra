@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import LiveProductCard from '@/components/product/LiveProductCard'
 import { useCollections } from '@/hooks/useCollections'
 import { useProducts } from '@/hooks/useProducts'
+import SEOHead from '@/components/layout/SEOHead'
 
 const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?w=1200&h=800&auto=format&fit=crop&q=80'
 
@@ -16,6 +17,7 @@ export default function CollectionDetailPage() {
   if (collectionsLoading) {
     return (
       <div>
+        <SEOHead title="Collection" canonical={slug ? `/collections/${slug}` : undefined} />
         <div className="h-[50vh] min-h-[320px] bg-ivory animate-pulse" />
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="h-6 w-48 bg-ivory rounded animate-pulse mb-8" />
@@ -32,6 +34,7 @@ export default function CollectionDetailPage() {
   if (!collection) {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+        <SEOHead title="Collection Not Found" noIndex />
         <h1 className="font-heading text-3xl text-cocoa mb-4">Collection not found</h1>
         <Link to="/collections" className="text-gold-accessible font-body font-medium hover:underline">
           View all collections
@@ -42,6 +45,12 @@ export default function CollectionDetailPage() {
 
   return (
     <div>
+      <SEOHead
+        title={collection.name}
+        description={collection.description || `Shop the ${collection.name} collection at Savinra.`}
+        canonical={`/collections/${collection.slug}`}
+        ogImage={collection.cover_image || undefined}
+      />
       {/* Banner */}
       <div className="relative h-[50vh] min-h-[320px]">
         <img

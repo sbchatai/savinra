@@ -6,6 +6,7 @@ import { useProduct } from '@/hooks/useProduct'
 import { useCart } from '@/context/CartContext'
 import { useWishlist } from '@/context/WishlistContext'
 import { cn, formatPrice } from '@/lib/utils'
+import SEOHead from '@/components/layout/SEOHead'
 
 const SIZE_GUIDE = [
   { size: 'XS', chest: '32"', waist: '26"', hip: '36"', length: '52"' },
@@ -40,6 +41,7 @@ export default function ProductDetailPage() {
 
   if (isLoading) return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <SEOHead title="Product" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-pulse">
         <div className="aspect-[3/4] bg-cocoa/10 rounded-card" />
         <div className="space-y-4">
@@ -54,6 +56,7 @@ export default function ProductDetailPage() {
 
   if (error || !product) return (
     <div className="max-w-7xl mx-auto px-4 py-20 text-center">
+      <SEOHead title="Product Not Found" noIndex />
       <h1 className="font-heading text-3xl text-cocoa mb-4">Product not found</h1>
       <Link to="/shop" className="text-gold-accessible font-body font-medium hover:underline">Browse all products</Link>
     </div>
@@ -88,8 +91,48 @@ export default function ProductDetailPage() {
     setTimeout(() => setAddedToCart(false), 2000)
   }
 
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || '',
+    image: product.images?.[0]?.url || '',
+    brand: { '@type': 'Brand', name: 'Savinra' },
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'INR',
+      price: (product.price / 100).toFixed(2),
+      availability: product.in_stock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+    },
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://savinra.in' },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: 'https://savinra.in/shop' },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: `https://savinra.in/products/${product.slug}`,
+      },
+    ],
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <SEOHead
+        title={product.name}
+        description={product.description?.slice(0, 155) || `Shop ${product.name} at Savinra.`}
+        canonical={`/products/${product.slug}`}
+        ogImage={product.images?.[0]?.url || undefined}
+        ogType="product"
+        jsonLd={[productJsonLd, breadcrumbJsonLd]}
+      />
       {/* Breadcrumb */}
       <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 font-body text-xs text-cocoa/50 mb-8">
         <Link to="/" className="hover:text-gold-accessible transition-colors">Home</Link>

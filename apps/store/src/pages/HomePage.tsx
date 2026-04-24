@@ -5,6 +5,7 @@ import { PRESS_MENTIONS } from '@/data/placeholder'
 import LiveProductCard from '@/components/product/LiveProductCard'
 import { useCollections } from '@/hooks/useCollections'
 import { useProducts } from '@/hooks/useProducts'
+import SEOHead from '@/components/layout/SEOHead'
 
 const OCCASIONS = [
   { label: 'Festive', emoji: '\u2728', href: '/shop?occasion=festive' },
@@ -41,6 +42,22 @@ export default function HomePage() {
 
   return (
     <div className="overflow-x-hidden">
+      <SEOHead
+        title="Handcrafted Indo-Western Fashion"
+        description="Shop premium handcrafted Indo-Western clothing at Savinra — kurtas, suits & festive wear. Free shipping above ₹999, easy 15-day returns."
+        canonical="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'WebSite',
+          name: 'Savinra',
+          url: 'https://savinra.in',
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: 'https://savinra.in/shop?q={search_term_string}',
+            'query-input': 'required name=search_term_string',
+          },
+        }}
+      />
 
       {/* Hero */}
       <section className="relative h-screen min-h-[640px] flex items-center justify-center overflow-hidden">
