@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Search, Heart, User, ShoppingBag, Menu, X, ChevronRight, ChevronDown } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/context/CartContext'
@@ -20,11 +20,14 @@ export default function SavinraHeader() {
   const [megaMenuOpen, setMegaMenuOpen] = useState(false)
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false)
   const [mobileExpandedCategory, setMobileExpandedCategory] = useState<string | null>(null)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { itemCount } = useCart()
   const { ids } = useWishlist()
   const { categories } = useCategories()
   const location = useLocation()
+  const navigate = useNavigate()
   const megaMenuRef = useRef<HTMLDivElement>(null)
   const shopBtnRef = useRef<HTMLButtonElement>(null)
 
@@ -33,6 +36,26 @@ export default function SavinraHeader() {
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setSearchOpen(false)
+        setSearchQuery('')
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
+      setSearchOpen(false)
+      setSearchQuery('')
+    }
+  }
 
   // Close mobile menu and mega-menu on route change
   useEffect(() => {
@@ -139,10 +162,45 @@ export default function SavinraHeader() {
 
             {/* Right Icons */}
             <div className="flex items-center gap-1">
-              {/* Search */}
-              <button className="p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-ivory" aria-label="Search">
-                <Search size={20} />
-              </button>
+              {/* Search — expands to input on click */}
+              <div className="relative flex items-center">
+                <AnimatePresence>
+                  {searchOpen && (
+                    <motion.form
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: 200, opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: 'easeInOut' }}
+                      onSubmit={handleSearchSubmit}
+                      className="overflow-hidden flex items-center"
+                    >
+                      <input
+                        autoFocus
+                        type="text"
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Search styles..."
+                        className="w-full bg-transparent border-b border-gold-accessible text-cocoa font-body text-sm placeholder-cocoa/40 focus:outline-none px-1 py-0.5 mr-2"
+                      />
+                    </motion.form>
+                  )}
+                </AnimatePresence>
+                <button
+                  onClick={() => {
+                    if (searchOpen && searchQuery.trim()) {
+                      navigate(`/shop?q=${encodeURIComponent(searchQuery.trim())}`)
+                      setSearchOpen(false)
+                      setSearchQuery('')
+                    } else {
+                      setSearchOpen(s => !s)
+                    }
+                  }}
+                  className="p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-gold-highlight/30"
+                  aria-label={searchOpen ? 'Submit search' : 'Open search'}
+                >
+                  <Search size={20} />
+                </button>
+              </div>
 
               {/* Wishlist */}
               <Link to="/wishlist" className="relative p-2 text-cocoa hover:text-gold-accessible transition-colors rounded-full hover:bg-ivory" aria-label="Wishlist">

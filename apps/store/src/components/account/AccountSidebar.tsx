@@ -2,9 +2,9 @@ import { Link, useLocation } from 'react-router-dom'
 import { Package, Heart, User, RotateCcw } from 'lucide-react'
 
 const LINKS = [
-  { label: 'My Orders', href: '/orders', icon: Package },
-  { label: 'Wishlist', href: '/wishlist', icon: Heart },
   { label: 'Profile', href: '/account', icon: User },
+  { label: 'Wishlist', href: '/wishlist', icon: Heart },
+  { label: 'My Orders', href: '/orders', icon: Package },
   { label: 'Returns', href: '/returns', icon: RotateCcw },
 ]
 

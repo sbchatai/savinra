@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
+export interface ProductVariant {
+  id: string
+  size: string
+  stock_count: number
+  price_delta: number
+}
+
 export interface ProductCard {
   id: string
   name: string
@@ -14,6 +21,7 @@ export interface ProductCard {
   occasions: string[]
   primary_image: string | null
   category_id: string | null
+  variants: ProductVariant[]
 }
 
 interface UseProductsFilters {
@@ -60,7 +68,7 @@ export function useProducts(filters?: UseProductsFilters) {
 
           let q = supabase
             .from('products')
-            .select('id, name, slug, price, compare_at_price, is_new, is_bestseller, in_stock, customizable, occasions, category_id, product_images(url, is_primary, sort_order)')
+            .select('id, name, slug, price, compare_at_price, is_new, is_bestseller, in_stock, customizable, occasions, category_id, product_images(url, is_primary, sort_order), product_variants(id, size, stock_count, price_delta)')
             .in('id', productIds)
             .eq('is_active', true)
             .is('deleted_at', null)
@@ -72,7 +80,7 @@ export function useProducts(filters?: UseProductsFilters) {
         } else {
           let q = supabase
             .from('products')
-            .select('id, name, slug, price, compare_at_price, is_new, is_bestseller, in_stock, customizable, occasions, category_id, product_images(url, is_primary, sort_order)')
+            .select('id, name, slug, price, compare_at_price, is_new, is_bestseller, in_stock, customizable, occasions, category_id, product_images(url, is_primary, sort_order), product_variants(id, size, stock_count, price_delta)')
             .eq('is_active', true)
             .is('deleted_at', null)
             .order('created_at', { ascending: false })
@@ -121,6 +129,7 @@ function mapProducts(data: any[]): ProductCard[] {
       occasions: p.occasions ?? [],
       primary_image: primary?.url ?? null,
       category_id: p.category_id ?? null,
+      variants: (p.product_variants ?? []) as ProductVariant[],
     }
   })
 }

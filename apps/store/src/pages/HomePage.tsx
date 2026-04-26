@@ -76,18 +76,36 @@ export default function HomePage() {
           <motion.p variants={fadeUp} className="font-body text-xs uppercase tracking-[0.4em] text-gold-highlight mb-5">
             Spring &middot; Summer 2026
           </motion.p>
-          <motion.h1 variants={fadeUp} className="savinra-shine-animated font-heading font-bold text-7xl sm:text-8xl lg:text-9xl leading-none mb-4">
-            <span>SAVINR</span>
-            <span className="relative inline-block">
+          <motion.h1 variants={fadeUp} className="font-heading font-bold text-7xl sm:text-8xl lg:text-9xl leading-none mb-4 flex items-center justify-center">
+            <span className="savinra-shine-animated">SAVINR</span>
+            <span className="savinra-shine-animated relative" style={{ display: 'inline-block' }}>
               A
               <svg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="absolute text-gold-highlight"
-                style={{ width: '0.3em', height: '0.3em', top: '-0.35em', left: '50%', transform: 'translateX(-50%)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }}
+                viewBox="0 0 12 14"
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  width: '0.26em',
+                  height: '0.26em',
+                  top: '-0.32em',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                }}
               >
-                <path d="M10 1C10 1 4 5 4 11a6 6 0 0012 0C16 5 10 1 10 1zm0 3.5C10 3.5 7 7 7 11a3 3 0 006 0c0-4-3-6.5-3-6.5z" opacity="0.3"/>
-                <path d="M10 0C6 3 3 7 3 11a7 7 0 0014 0C17 7 14 3 10 0zm-.5 18.9A6 6 0 014 11c0-3.4 2.4-6.7 5.5-9.3V18.9z" />
+                <defs>
+                  <linearGradient id="leafGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#8C7A2E" />
+                    <stop offset="30%" stopColor="#D4AF37" />
+                    <stop offset="50%" stopColor="#F5E6A3" />
+                    <stop offset="70%" stopColor="#D4AF37" />
+                    <stop offset="100%" stopColor="#8C7A2E" />
+                  </linearGradient>
+                </defs>
+                <path
+                  fill="url(#leafGold)"
+                  d="M6 0 C2.5 1.5 0 5 0 8 a6 6 0 0 0 12 0 C12 5 9.5 1.5 6 0z M5.5 2 L5.5 13.5"
+                  strokeWidth="0"
+                />
               </svg>
             </span>
           </motion.h1>
@@ -170,14 +188,55 @@ export default function HomePage() {
           <h2 className="font-heading text-4xl font-semibold text-cocoa">Our Collections</h2>
         </motion.div>
         {collectionsLoading ? (
-          <div className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {[0, 1, 2].map(i => (
-              <div key={i} className="min-w-[280px] sm:min-w-[340px] flex-shrink-0 aspect-[4/5] bg-ivory rounded-card animate-pulse" />
+              <div key={i} className="aspect-[3/4] bg-ivory rounded-card animate-pulse" />
+            ))}
+          </div>
+        ) : collections.length <= 3 ? (
+          /* Grid layout for 1–3 collections — no scroll needed */
+          <div className={`grid gap-5 ${
+            collections.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
+            collections.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-xl mx-auto' :
+            'grid-cols-1 sm:grid-cols-3'
+          }`}>
+            {collections.map((col, i) => (
+              <motion.div
+                key={col.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                whileHover={{ y: -4 }}
+                className="group relative overflow-hidden rounded-card shadow-card cursor-pointer"
+              >
+                <Link to={`/collections/${col.slug}`}>
+                  <div className="aspect-[3/4] overflow-hidden">
+                    <img
+                      src={col.cover_image ?? FALLBACK_IMAGE}
+                      alt={col.name}
+                      width={320}
+                      height={427}
+                      loading={i === 0 ? 'eager' : 'lazy'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/10 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <h3 className="font-heading text-xl font-semibold text-white mb-1">{col.name}</h3>
+                    <p className="font-body text-xs text-white/75 mb-3 line-clamp-2">{col.description}</p>
+                    <span className="inline-flex items-center gap-1.5 text-gold-highlight text-xs font-body font-medium group-hover:gap-2.5 transition-all">
+                      Explore <ArrowRight size={12} />
+                    </span>
+                  </div>
+                </Link>
+              </motion.div>
             ))}
           </div>
         ) : (
+          /* Horizontal scroll for 4+ collections */
           <div
-            className="flex gap-6 overflow-x-auto pb-4 -mx-4 px-4"
+            className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {collections.map((col, i) => (
@@ -186,27 +245,26 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.12 }}
+                transition={{ delay: i * 0.1 }}
                 whileHover={{ y: -4 }}
-                className="min-w-[280px] sm:min-w-[340px] flex-shrink-0 group relative overflow-hidden rounded-card shadow-card cursor-pointer"
+                className="min-w-[200px] sm:min-w-[240px] flex-shrink-0 snap-start group relative overflow-hidden rounded-card shadow-card cursor-pointer"
               >
                 <Link to={`/collections/${col.slug}`}>
-                  <div className="aspect-[4/5] overflow-hidden">
+                  <div className="aspect-[3/4] overflow-hidden">
                     <img
                       src={col.cover_image ?? FALLBACK_IMAGE}
                       alt={col.name}
-                      width={400}
-                      height={500}
-                      loading={i === 0 ? 'eager' : 'lazy'}
+                      width={240}
+                      height={320}
+                      loading={i < 3 ? 'eager' : 'lazy'}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-cocoa/70 via-cocoa/10 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <h3 className="font-heading text-2xl font-semibold text-white mb-1.5">{col.name}</h3>
-                    <p className="font-body text-sm text-white/80 mb-4 line-clamp-2">{col.description}</p>
-                    <span className="inline-flex items-center gap-1.5 text-gold-highlight text-sm font-body font-medium group-hover:gap-3 transition-all">
-                      Explore Collection <ArrowRight size={14} />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="font-heading text-lg font-semibold text-white mb-1">{col.name}</h3>
+                    <span className="inline-flex items-center gap-1.5 text-gold-highlight text-xs font-body font-medium group-hover:gap-2.5 transition-all">
+                      Explore <ArrowRight size={12} />
                     </span>
                   </div>
                 </Link>

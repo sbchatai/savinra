@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronDown, Search } from 'lucide-react'
 import { useProducts } from '@/hooks/useProducts'
 import { useCategories } from '@/hooks/useCategories'
 import LiveProductCard from '@/components/product/LiveProductCard'
@@ -28,6 +28,7 @@ export default function ShopPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
   const [selectedSizes, setSelectedSizes] = useState<Set<string>>(new Set())
   const [occasionFilter, setOccasionFilter] = useState(() => searchParams.get('occasion') || '')
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('q') || '')
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [sort, setSort] = useState<SortOption>('newest')
@@ -59,6 +60,7 @@ export default function ShopPage() {
     setSelectedCategories(new Set())
     setSelectedSizes(new Set())
     setOccasionFilter('')
+    setSearchQuery('')
     setPriceMin('')
     setPriceMax('')
   }
@@ -87,15 +89,24 @@ export default function ShopPage() {
       result = result.filter(p => p.price >= minP && p.price <= maxP)
     }
 
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        ((p as any).tags ?? []).some((tag: string) => tag.toLowerCase().includes(q))
+      )
+    }
+
     switch (sort) {
       case 'price-asc': result.sort((a, b) => a.price - b.price); break
       case 'price-desc': result.sort((a, b) => b.price - a.price); break
       default: break
     }
     return result
-  }, [products, selectedCategories, selectedSizes, priceMin, priceMax, sort])
+  }, [products, selectedCategories, selectedSizes, priceMin, priceMax, sort, searchQuery])
 
-  const hasFilters = selectedCategories.size > 0 || selectedSizes.size > 0 || !!occasionFilter || !!priceMin || !!priceMax
+  const hasFilters = selectedCategories.size > 0 || selectedSizes.size > 0 || !!occasionFilter || !!priceMin || !!priceMax || !!searchQuery.trim()
 
   const FilterPanel = () => (
     <div className="space-y-8">
@@ -192,6 +203,28 @@ export default function ShopPage() {
         <p className="font-body text-sm text-cocoa/60">
           {isLoading ? 'Loading...' : `${filtered.length} pieces`}
         </p>
+      </div>
+
+      {/* Search bar */}
+      <div className="mb-6">
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-cocoa/40" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search styles, fabrics, occasions..."
+            className="w-full pl-9 pr-4 py-3 bg-ivory border border-cocoa/15 rounded-card text-sm font-body text-cocoa placeholder-cocoa/40 focus:outline-none focus:border-gold-accessible"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-cocoa/40 hover:text-cocoa"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Occasion tabs */}
